@@ -1,0 +1,105 @@
+{
+    "optimal_time": 25.0,
+    "spt_time": 25,
+    "lpt_time": 25,
+    "n_jobs": 3,
+    "n_resources": 3,
+    "n_ops_per_job": 3,
+    "max_op_time": 9,
+    "jssp_identification": "3x3_520_inst.json",
+    "cp-sat_solver_time": 0.004551682621240616,
+    "spt_compute_time": 0.27087363973259926,
+    "lpt_compute_time": 0.45388919208198786,
+    "jssp_instance": {
+        "durations": [
+            [
+                5,
+                9,
+                9
+            ],
+            [
+                3,
+                1,
+                2
+            ],
+            [
+                3,
+                9,
+                1
+            ]
+        ],
+        "machines": [
+            [
+                2,
+                1,
+                0
+            ],
+            [
+                1,
+                2,
+                0
+            ],
+            [
+                1,
+                2,
+                0
+            ]
+        ]
+    },
+    "optimal_gantt_data": {
+        "0": {
+            "Job_num": 1,
+            "Mach_num": 0,
+            "Job_time": 2,
+            "Start_time": 6
+        },
+        "1": {
+            "Job_num": 0,
+            "Mach_num": 0,
+            "Job_time": 9,
+            "Start_time": 15
+        },
+        "2": {
+            "Job_num": 2,
+            "Mach_num": 0,
+            "Job_time": 1,
+            "Start_time": 24
+        },
+        "3": {
+            "Job_num": 1,
+            "Mach_num": 1,
+            "Job_time": 3,
+            "Start_time": 0
+        },
+        "4": {
+            "Job_num": 2,
+            "Mach_num": 1,
+            "Job_time": 3,
+            "Start_time": 3
+        },
+        "5": {
+            "Job_num": 0,
+            "Mach_num": 1,
+            "Job_time": 9,
+            "Start_time": 6
+        },
+        "6": {
+            "Job_num": 0,
+            "Mach_num": 2,
+            "Job_time": 5,
+            "Start_time": 0
+        },
+        "7": {
+            "Job_num": 1,
+            "Mach_num": 2,
+            "Job_time": 1,
+            "Start_time": 5
+        },
+        "8": {
+            "Job_num": 2,
+            "Mach_num": 2,
+            "Job_time": 9,
+            "Start_time": 6
+        }
+    }
+}
