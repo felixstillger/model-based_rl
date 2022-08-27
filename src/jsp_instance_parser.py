@@ -4,11 +4,11 @@ import json
 import numpy as np
 import pathlib as pl
 
-import jss_utils.PATHS as PATHS
+import src.jss_utils.PATHS as PATHS
 
 from typing import Dict
 
-from jss_utils.jss_logger import log
+from src.jss_utils.jss_logger import log
 
 
 def parse_jps_standard_specification(instance_path: pl.Path) -> (np.ndarray, np.ndarray):

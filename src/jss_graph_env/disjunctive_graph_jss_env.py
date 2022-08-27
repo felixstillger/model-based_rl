@@ -13,7 +13,7 @@ from typing import List, Union
 from src.jss_graph_env.disjunctive_graph_jss_visualizer import DisjunctiveGraphJspVisualizer
 
 
-from jss_utils.jss_logger import log
+from src.jss_utils.jss_logger import log
 from stable_baselines3.common.env_checker import check_env
 
 

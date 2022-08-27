@@ -3,7 +3,7 @@ import shutil
 
 from rich.logging import RichHandler
 
-from jss_utils.banner import big_banner, small_banner
+from src.jss_utils.banner import big_banner, small_banner
 
 # print banner when logger is imported
 w, h = shutil.get_terminal_size((80, 20))

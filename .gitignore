@@ -2,3 +2,4 @@
 /.vscode
 /roms
 /training_checkpoints
+/.pyc
