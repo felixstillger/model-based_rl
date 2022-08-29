@@ -59,9 +59,8 @@ class TaxiTaxi(gym.Env):
 """
 class discretetobox(gym.ObservationWrapper):
     def __init__(self, env):
-        super().__init__(env)
-        assert isinstance(env.observation_space, gym.spaces.Discrete), \
-            "Should only be used to wrap Discrete envs."
+        super().__init__(env, render_mode='human')
+        assert isinstance(env.observation_space, gym.spaces.Discrete)
         self.n = self.env.observation_space.n
         self.running_reward=0
         #self.observation_space = gym.spaces.Box(0, 1, (self.n,))
@@ -257,4 +256,6 @@ class discretetobox2(gym.ObservationWrapper):
     def reset(self):
         obs=self.env.reset()
         return self.observation(obs)
+    def render(self, render_mode):
+        return self.env.render(mode="human")
         
