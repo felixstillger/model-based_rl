@@ -8,6 +8,7 @@ from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
 from ray.rllib.models.catalog import ModelCatalog
 from wrapper.jssp_wrapper import jssp_obs_wrapper
 from wrapper.jssp_wrapper import Jssp_wrapper
+import time
 
 config = {
     "framework": "torch",
@@ -38,9 +39,6 @@ config = {
 
 # %%
 
-from wrapper.jssp_wrapper import Jssp_wrapper
-
-
 def env_creator(env_config):
     #env = discretetobox(gym.make("Taxi-v3"))
     #env = gym.make('LunarLander-v2')
@@ -57,8 +55,9 @@ agent = AlphaZeroTrainer( config=config, env='customjssp')
 # %%
 print("start training")
 for _ in range(0,150):
+    tmp_time=time.time()
     agent.train()
-    print(f"training iteration {_} finished")
+    print(f"training iteration {_} finished after {time.time() - tmp_time} seconds")
     #agent.save(f"save_az/rllib_checkpoint{_}")
     agent.save_checkpoint(f"training_checkpoints/checkpoints_az_jsp")
     #agent.save_to_object(f"objects_az/rllib_checkpoint{_}")

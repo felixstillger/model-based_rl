@@ -403,6 +403,13 @@ class DisjunctiveGraphJssEnv(gym.Env):
         # reward is always 0.0 expect if the jps is scheduled completely
         if self.reward_mode=="makespan":
             reward = 0
+        
+        elif self.reward_mode=="opt_makespan":
+            if self.valid_action_mask(action_mode='task')[action]:
+                reward = 0
+            else:
+                reward = -1
+
         # change to total time in parallel and not overlapping jobs at start time    
         elif self.reward_mode=="utilisation":
             if task_id != None:
@@ -483,6 +490,10 @@ class DisjunctiveGraphJssEnv(gym.Env):
                 info["gantt_df"] = self.network_as_dataframe()
                 if self.verbose > 0:
                     log.info(f"makespan: {makespan}, return: {reward:.2f}")
+            elif self.reward_mode=="opt_makespan":                    
+                df = pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv')
+                makespan = nx.dag_longest_path_length(self.G)
+                reward = ((2*665)-makespan)/665
 
             elif self.reward_mode=="utilisation":
                 if False:
