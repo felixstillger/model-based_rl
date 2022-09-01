@@ -507,7 +507,6 @@ class DisjunctiveGraphJssEnv(gym.Env):
                 reward= 1000 - nx.dag_longest_path_length(self.G)     
 
         info["scaling_divisor"] = self.scaling_divisor
-
         state = self._state_array()
         return state, reward, done, info
 
