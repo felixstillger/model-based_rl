@@ -29,7 +29,7 @@ class jssp_klagenfurt_obs_wrapper(gym.ObservationWrapper):
     def set_state(self, state):
         self.env = deepcopy(state)
         return {"obs":self.env.state,"action_mask":self.env.legal_actions}
-"""
+
     def step(self, action: int):
         ## this if statemenet differs from original implementation, if an illegal action ist proposed, it is rewarded negativ, but the current state is not changed... hopefully does not end in a bad loop
 
@@ -85,7 +85,7 @@ class jssp_klagenfurt_obs_wrapper(gym.ObservationWrapper):
                 scaled_reward = self.env._reward_scaler(reward)
                 return self.env._get_current_state_representation(), scaled_reward, self.env._is_done(), {}
 
-                """
+                
                 
 """
                 def step(self, action: int):
