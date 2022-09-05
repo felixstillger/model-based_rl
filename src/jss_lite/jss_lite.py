@@ -4,7 +4,7 @@ import gym
 import numpy as np
 from pathlib import Path
 from os.path import exists
-from math import ceil
+import math
 
 class jss_lite(gym.Env):
 
@@ -87,7 +87,9 @@ class jss_lite(gym.Env):
         ######## inital observation
         self.observation= np.zeros(shape=self.observation_space_shape)
         # first row is legal action mask
-        self.count_finished_tasks_job_matrix=np.zeros(self.n_jobs,dtype=np.int32)
+        self.observation[:,0]=np.full((self.n_jobs+1,),True)
+        # set skip timestep to False
+        self.observation[self.n_jobs][0]=False
         self.current_timestep=0
 
         ## todo:assure that tasks is right!
@@ -159,7 +161,7 @@ class jss_lite(gym.Env):
         action_mask=np.full((self.n_jobs+1,),False)
         avail_machines=[]
         for i in range(self.n_machines):
-            if self.current_machines_status[i][0]==np.nan:
+            if math.isnan(current_machines_status[i][0]):
                 avail_machines.append(i)
         for i in range(self.n_jobs):
             #obs i 5 is normed count of finished tasks
@@ -171,4 +173,4 @@ class jss_lite(gym.Env):
         return round(value/max_value,4)
 
     def denorm_with_max(normed_value,max_value):
-        return ceil(normed_value*max_value)
+        return math.ceil(normed_value*max_value)
