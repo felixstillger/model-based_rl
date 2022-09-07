@@ -161,6 +161,8 @@ class jss_lite(gym.Env):
                     # 
     def step(self,action):
         reward=0
+        # update action mask from observation
+        self.observation[:,0]=self.get_legal_actions(self.observation)
         if self.observation[action,0]==False:
             raise ValueError("action is not in legal actions: implement to do nothing...")
         if action==self.n_jobs:
@@ -173,15 +175,18 @@ class jss_lite(gym.Env):
             else:
                 # temp. saving timestep
                 forward_timestep=self.current_timestep
+
                 self.timestemp_list.sort()
+                
                 self.current_timestep=self.timestemp_list.pop(0)
+                print(f"new time is {self.current_timestep}")
                 # how large is the timestep?
                 forward_timestep=self.current_timestep-forward_timestep
                 # substract forwarded time from current production, update on all active machines:
                 for i in range(self.n_machines):
                     #check if machine is active, active if 0th entry is not nan
                     if math.isnan(self.current_machines_status[i,0])==False:
-                        job=self.current_machines_status[i,0]
+                        job=int(self.current_machines_status[i,0])
                         self.processed_and_max_time_job_matrix[job,1]=self.processed_and_max_time_job_matrix[job,1]+forward_timestep
                         # leftover time for task on machine i
                         self.current_machines_status[i,1]-=forward_timestep
@@ -191,8 +196,8 @@ class jss_lite(gym.Env):
                             #machine is finished with task, need reward before
                             self.current_machines_status[i,0]=np.nan
                             # residual time of job, obviously =0
-                            if self.current_machines_status[i,1]!=0:
-                                raise ValueError("Problems with left over time for task") 
+                            #if self.current_machines_status[i,1]!=0:
+                            #    raise ValueError(f"Problems with left over time for task is {self.current_machines_status[i,1]} not 0") 
                             self.count_finished_tasks_job_matrix[job]+=1
                             self.count_finished_tasks_machine_matrix[i]+=1 
         else:        
@@ -215,16 +220,21 @@ class jss_lite(gym.Env):
                 self.timestemp_list.append(self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
         # update observation:
 
-        action_mask=np.full((self.n_jobs+1,),False)
-        avail_machines=[]
-        for i in range(self.n_machines):
-            if math.isnan(self.current_machines_status[i][0]):
-                avail_machines.append(i)
-        for i in range(self.n_jobs):
-            #obs i 5 is normed count of finished tasks
-            if self.job_machine_matrix[i][self.denorm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)] in avail_machines:
-                action_mask[i]=True
-        self.observation[:,0]=action_mask
+        # action_mask=np.full((self.n_jobs+1,),False)
+        # avail_machines=[]
+        # for i in range(self.n_machines):
+        #     if math.isnan(self.current_machines_status[i][0]):
+        #         avail_machines.append(i)
+        # for i in range(self.n_jobs):
+        #     #obs i 5 is normed count of finished tasks
+        #     if self.job_machine_matrix[i][self.denorm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)] in avail_machines:
+        #         action_mask[i]=True
+        
+        
+    
+        #self.observation[:,0]=action_mask
+        #update mask in observation
+        self.observation[:,0]=self.get_legal_actions(self.observation)
         for i in range(self.n_jobs):
 
             # third attribute: process time of next scheduled task
@@ -300,19 +310,19 @@ class jss_lite(gym.Env):
     def set_state():
         pass
     def render(self):
-        # is not time critical function. so O(n^2) is no problem
+        # is not time critical function. so O(n^2) is no problem; todo:make more pretty
         def production_to_dict(input,i,j):
             return(dict(Task=f"job_{input[0]}", Start=dt + timedelta(seconds=int(input[2])),Finish=dt + timedelta(seconds=int(input[3])),Resource=f"machine_{i}"))
         dt = datetime(2022, 1, 1, 0, 0, 0)
         #stores quatuple(job,task,start_time,finish_time) 
-        production_list=self.production_list
         liste=[]
         for i in range(self.n_machines):
             for j in range(self.n_jobs):
-                if production_list[i,j] is not None:
-                    liste.append(production_to_dict(production_list[i,j],i,j))
-        df_2=pd.DataFrame(liste)
-        fig = px.timeline(df_2, x_start="Start", x_end="Finish", y="Task", color="Resource")
+                if self.production_list[i,j] is not None:
+                    liste.append(production_to_dict(self.production_list[i,j],i,j))
+        df_render=pd.DataFrame(liste)
+        fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
+        #todo, save or do smth else to console rendering
         fig.show()
 
 
@@ -323,9 +333,12 @@ class jss_lite(gym.Env):
             if math.isnan(self.current_machines_status[i][0]):
                 avail_machines.append(i)
         for i in range(self.n_jobs):
-            #obs i 5 is normed count of finished tasks
-            if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines:
+            #obs i 5 is normed count of finished tasks# todo: add here check if current job is finished
+
+            if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and self.processed_and_max_time_job_matrix[i,0]==0:
                 action_mask[i]=True
+        if True not in action_mask and self.done ==False:
+            action_mask[self.n_jobs]=True
         return action_mask
 
     def norm_with_max(self,value,max_value):
