@@ -1,10 +1,11 @@
-from turtle import shape
 import pandas as pd
 import gym
 import numpy as np
-from pathlib import Path
 from os.path import exists
 import math
+import plotly.express as px
+import pandas as pd
+from datetime import datetime, timedelta
 
 class jss_lite(gym.Env):
 
@@ -298,8 +299,22 @@ class jss_lite(gym.Env):
         pass
     def set_state():
         pass
-    def render():
-        pass
+    def render(self):
+        # is not time critical function. so O(n^2) is no problem
+        def production_to_dict(input,i,j):
+            return(dict(Task=f"job_{input[0]}", Start=dt + timedelta(seconds=int(input[2])),Finish=dt + timedelta(seconds=int(input[3])),Resource=f"machine_{i}"))
+        dt = datetime(2022, 1, 1, 0, 0, 0)
+        #stores quatuple(job,task,start_time,finish_time) 
+        production_list=self.production_list
+        liste=[]
+        for i in range(self.n_machines):
+            for j in range(self.n_jobs):
+                if production_list[i,j] is not None:
+                    liste.append(production_to_dict(production_list[i,j],i,j))
+        df_2=pd.DataFrame(liste)
+        fig = px.timeline(df_2, x_start="Start", x_end="Finish", y="Task", color="Resource")
+        fig.show()
+
 
     def get_legal_actions(self,obs):
         action_mask=np.full((self.n_jobs+1,),False)
