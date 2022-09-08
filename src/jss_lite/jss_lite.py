@@ -95,7 +95,7 @@ class jss_lite(gym.Env):
         self.count_finished_tasks_machine_matrix=np.zeros(self.n_machines)
         self.count_finished_tasks_job_matrix=np.zeros(self.n_jobs,dtype=np.int32)
         # starting point
-        self.timestemp_list.append(0)
+        #self.timestemp_list.append(0)
     
     ######## inital observation
         self.observation= np.zeros(shape=self.observation_space_shape)
@@ -187,12 +187,12 @@ class jss_lite(gym.Env):
                     #check if machine is active, active if 0th entry is not nan
                     if math.isnan(self.current_machines_status[i,0])==False:
                         job=int(self.current_machines_status[i,0])
-                        self.processed_and_max_time_job_matrix[job,1]=self.processed_and_max_time_job_matrix[job,1]+forward_timestep
+                        self.processed_and_max_time_job_matrix[job,1]=self.processed_and_max_time_job_matrix[i,1]+forward_timestep
                         # leftover time for task on machine i
                         self.current_machines_status[i,1]-=forward_timestep
                         #total time of machine working
                         self.current_machines_status[i,2]+=forward_timestep
-                        if self.processed_and_max_time_job_matrix[job,1] >= self.processed_and_max_time_job_matrix[job,1]:
+                        if self.processed_and_max_time_job_matrix[job,1] >= self.processed_and_max_time_job_matrix[i,1]:
                             #machine is finished with task, need reward before
                             self.current_machines_status[i,0]=np.nan
                             # residual time of job, obviously =0
@@ -304,7 +304,6 @@ class jss_lite(gym.Env):
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
         return self.observation
 
-
     def get_state():
         pass
     def set_state():
@@ -321,10 +320,11 @@ class jss_lite(gym.Env):
                 if self.production_list[i,j] is not None:
                     liste.append(production_to_dict(self.production_list[i,j],i,j))
         df_render=pd.DataFrame(liste)
-        fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
+        #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
+        fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Resource", color="Task")
+
         #todo, save or do smth else to console rendering
         fig.show()
-
 
     def get_legal_actions(self,obs):
         action_mask=np.full((self.n_jobs+1,),False)
