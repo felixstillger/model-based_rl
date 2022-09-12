@@ -29,7 +29,8 @@ class jss_lite(gym.Env):
         #check if correct instance path is provided and if standard convention of the instance file is followed:
 
         #get_self: n_jobs,n_machines
-        instance_path = "/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/standard/abz5.txt"
+        #instance_path = "/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/standard/abz5.txt"
+        
         if not exists(instance_path):
             raise FileExistsError(f"File does not exists or {instance_path} is no valid path")
         if instance_path is None:
@@ -90,14 +91,14 @@ class jss_lite(gym.Env):
         ## todo:assure that tasks is right!
         self.n_tasks=self.job_tasklength_matrix.shape[1]
         #stores quatuple(job,task,start_time,finish_time) 
-        self.production_list=np.empty((self.n_machines,self.n_tasks),dtype=object)
+        self.production_list=np.empty((self.n_machines,int(self.n_jobs*self.n_tasks/self.n_machines)),dtype=object)
         # counter for finished taska and jobs
         self.count_finished_tasks_machine_matrix=np.zeros(self.n_machines,dtype=np.int32)
         self.count_finished_tasks_job_matrix=np.zeros(self.n_jobs,dtype=np.int32)
         # starting point
         #self.timestemp_list.append(0)
     
-    ######## inital observation
+        # inital observation
         self.observation= np.zeros(shape=self.observation_space_shape)
         # first row is legal action mask
         self.observation[:,0]=np.full((self.n_jobs+1,),True)
@@ -268,7 +269,7 @@ class jss_lite(gym.Env):
         self.timestemp_list=[]
         self.done=False
         #stores quatuple(job,task,start_time,finish_time) 
-        self.production_list=np.empty((self.n_machines,self.n_tasks),dtype=object)
+        self.production_list=np.empty((self.n_machines,int(self.n_tasks*self.n_jobs/self.n_machines)),dtype=object)
         # counter for finished taska and jobs
         self.count_finished_tasks_machine_matrix=np.zeros(self.n_machines)
         self.count_finished_tasks_job_matrix=np.zeros(self.n_jobs,dtype=np.int32)
@@ -315,20 +316,20 @@ class jss_lite(gym.Env):
         pass
     def set_state():
         pass
-    def render(self):
+    def render(self,x_bar="Machine",y_bar="Job"):
         # is not time critical function. so O(n^2) is no problem; todo:make more pretty
         def production_to_dict(input,i,j):
-            return(dict(Task=f"job_{input[0]}", Start=dt + timedelta(seconds=int(input[2])),Finish=dt + timedelta(seconds=int(input[3])),Resource=f"machine_{i}"))
+            return(dict(Job=f"job_{input[0]}", Start=dt + timedelta(seconds=int(input[2])),Finish=dt + timedelta(seconds=int(input[3])),Machine=f"machine_{i}"))
         dt = datetime(2022, 1, 1, 0, 0, 0)
         #stores quatuple(job,task,start_time,finish_time) 
         liste=[]
-        for i in range(self.n_machines):
-            for j in range(self.n_jobs):
+        for i in range(self.production_list.shape[0]):
+            for j in range(self.production_list.shape[1]):
                 if self.production_list[i,j] is not None:
                     liste.append(production_to_dict(self.production_list[i,j],i,j))
         df_render=pd.DataFrame(liste)
         #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
-        fig = px.timeline(df_render, x_start="Start", x_end="Finish", color="Resource", y="Task")
+        fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
 
         #todo, save or do smth else to console rendering
         fig.show()
@@ -343,8 +344,11 @@ class jss_lite(gym.Env):
             #obs i 4 is normed count of finished tasks# todo: add here check if current job is finished
             # todo: check here the constraints
             #if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and self.processed_and_max_time_job_matrix[i,0]==0 and i not in self.current_machines_status[:,0]:
-            if self.denorm_with_max(obs[i][4],self.n_tasks)!=self.n_tasks:
-                if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and i not in self.current_machines_status[:,0]: 
+            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
+                
+                if self.job_machine_matrix[i][self.count_finished_tasks_job_matrix[i]] in avail_machines and i not in self.current_machines_status[:,0]: 
+
+                #if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and i not in self.current_machines_status[:,0]: 
                     action_mask[i]=True
         if True not in action_mask and self.done ==False:
             action_mask[self.n_jobs]=True
@@ -362,3 +366,7 @@ class jss_lite(gym.Env):
         #state=np.concatenate(np.ravel(obs[0:n_jobs+1,0]),np.ravel(obs[0:n_jobs,1:4]),np.ravel(obs[0:n_machines,5]),axis=None)
         state=obs
         return state
+    # debugging method to check the plausiblity of the production plan
+    def check_prouction_plan(self):
+        pass
+
