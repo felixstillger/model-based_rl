@@ -316,23 +316,43 @@ class jss_lite(gym.Env):
         pass
     def set_state():
         pass
-    def render(self,x_bar="Machine",y_bar="Job"):
+    def render(self,x_bar="Machine",y_bar="Job",start_count=0):
         # is not time critical function. so O(n^2) is no problem; todo:make more pretty
         def production_to_dict(input,i,j):
-            return(dict(Job=f"job_{input[0]}", Start=dt + timedelta(seconds=int(input[2])),Finish=dt + timedelta(seconds=int(input[3])),Machine=f"machine_{i}"))
+            return(dict(Job=f"job_{str(input[0]+start_count).zfill(max_len)}", Start=dt + timedelta(seconds=int(input[2]+start_count)),Finish=dt + timedelta(seconds=int(input[3])),Machine=f"machine_{str(i+start_count).zfill(max_len)}"))
         dt = datetime(2022, 1, 1, 0, 0, 0)
         #stores quatuple(job,task,start_time,finish_time) 
         liste=[]
+        max_len=len(str(max(self.production_list.shape[0]-1+start_count,self.production_list.shape[1]-1+start_count)))
         for i in range(self.production_list.shape[0]):
             for j in range(self.production_list.shape[1]):
                 if self.production_list[i,j] is not None:
                     liste.append(production_to_dict(self.production_list[i,j],i,j))
         df_render=pd.DataFrame(liste)
+        df_render.sort_values(by=y_bar,inplace=True)
         #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
         fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
 
         #todo, save or do smth else to console rendering
         fig.show()
+
+    def render_to_df(self,x_bar="Machine",y_bar="Job",start_count=0):
+        # is not time critical function. so O(n^2) is no problem; todo:make more pretty
+        def production_to_dict(input,i,j):
+            return(dict(Job=f"job_{str(input[0]+start_count).zfill(max_len)}", Start=dt + timedelta(seconds=int(input[2]+start_count)),Finish=dt + timedelta(seconds=int(input[3])),Machine=f"machine_{str(i+start_count).zfill(max_len)}"))
+        dt = datetime(2022, 1, 1, 0, 0, 0)
+        #stores quatuple(job,task,start_time,finish_time) 
+        liste=[]
+        max_len=len(str(max(self.production_list.shape[0]-1+start_count,self.production_list.shape[1]-1+start_count)))
+        for i in range(self.production_list.shape[0]):
+            for j in range(self.production_list.shape[1]):
+                if self.production_list[i,j] is not None:
+                    liste.append(production_to_dict(self.production_list[i,j],i,j))
+        df_render=pd.DataFrame(liste)
+        df_render.sort_values(by=y_bar,inplace=True)
+        #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
+        fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
+        return df_render, fig
 
     def get_legal_actions(self,obs):
         action_mask=np.full((self.n_jobs+1,),False)
