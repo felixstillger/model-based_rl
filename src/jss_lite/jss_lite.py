@@ -6,7 +6,7 @@ import math
 import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
-
+import time
 class jss_lite(gym.Env):
 
     def __init__(self, instance_path=None):
@@ -169,7 +169,7 @@ class jss_lite(gym.Env):
     def step(self,action):
         reward=0
         # update action mask from observation
-        self.observation[:,0]=self.get_legal_actions(self.observation)
+        
         if self.observation[action,0]==False:
             raise ValueError("action is not in legal actions: implement to do nothing...")
         # as long timestemp list is not empty and action is a real and no dummy action; todo: implement if statement for dummy action
@@ -192,11 +192,11 @@ class jss_lite(gym.Env):
             # get action to block, r_action 
             r_action=action-self.n_jobs
             # append action to the blocked actions
-            self.blocked_actions.append(r_action)    
-                   
+            self.blocked_actions.append(r_action)              
         # update observation:
         #update mask in observation
-        self.observation[:,0]=self.get_legal_actions(self.observation)
+
+        #self.observation[:,0]=self.get_legal_actions(self.observation)
         for i in range(self.n_jobs):
 
             # third attribute: process time of next scheduled task, set to 0 if taska are finished
@@ -218,9 +218,10 @@ class jss_lite(gym.Env):
                 self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
         info="everything fine"
         state=self.observation_to_state(self.observation)
-
         ## insert: update timestemp if there is no legal action left
-        while True not in self.get_legal_actions(self.observation):
+        self.observation[:,0]=self.get_legal_actions(self.observation)
+
+        while True not in self.observation[:,0]:
             #print("go to next timestemp possible")
             #implement to jump to next timestemp
             #check if done? todo: add aditional checks like are all tasks done and satisfied or just problems with timestemp?
@@ -261,7 +262,7 @@ class jss_lite(gym.Env):
                             #    raise ValueError(f"Problems with left over time for task is {self.current_machines_status[i,1]} not 0") 
                             self.count_finished_tasks_job_matrix[job]+=1
                             self.count_finished_tasks_machine_matrix[i]+=1 
-
+            self.observation[:,0]=self.get_legal_actions(self.observation)
         return state, reward, self.done, info
 
     def get_state():
@@ -326,13 +327,13 @@ class jss_lite(gym.Env):
         #    action_mask[self.n_jobs]=True
 
         # here comes the definitions for dummy actions:
+        
         for i in range(self.n_jobs):
             #you can only block if the action is set legal before
             if action_mask[i]==True:
                 # set dummy action to true if a job could finish within the time the actual job is proceeded and the overall left processing time of the stopped action->job is smaller(how much?) than the who finished:
                 # todo: clean this up
                 finished_tasks=[]
-                next_machines=[]
                 action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
                 for j in range(self.n_machines):
                     if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
@@ -340,9 +341,8 @@ class jss_lite(gym.Env):
                 for j in finished_tasks:
                     j=int(j)
                     if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
-                        next_machines.append(self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1])    
-                if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]] in next_machines:
-                    action_mask[i+self.n_jobs]=True       
+                        if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
+                            action_mask[i+self.n_jobs]=True    
         return action_mask
 
     def norm_with_max(self,value,max_value):
