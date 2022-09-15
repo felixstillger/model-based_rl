@@ -166,20 +166,66 @@ class jss_lite(gym.Env):
         self.observation[:,0]=self.get_legal_actions(self.observation)
         if self.observation[action,0]==False:
             raise ValueError("action is not in legal actions: implement to do nothing...")
-        if action==self.n_jobs:
+        # as long timestemp list is not empty and action is a real and no dummy action; todo: implement if statement for dummy action
+        if action < self.action_space.n: # todo: important update here action size    
+            # assign task (from action) to available machine and update the machine status
+            # block the free machine with current job
+            #todo: delete error
+            if math.isnan(self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],0])==False:
+                #print(self.current_machines_status)
+                #print(self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],0])
+                raise ValueError("machine is not free") 
+            self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],0]=action
+            self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],1]=self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]]
+            # update production_list:(job,tas,start,finish)
+            #self.production_list[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],self.count_finished_tasks_job_matrix[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]]]]=(action,self.count_finished_tasks_job_matrix[action],self.current_timestep,self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
+            self.production_list[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],int(self.count_finished_tasks_machine_matrix[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]]])]=(action,self.count_finished_tasks_job_matrix[action],self.current_timestep,self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
+            # add end time to timestemp list, first check if value is not already in list:
+            if self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]] not in self.timestemp_list:
+                self.timestemp_list.append(self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
+        # update observation:
+        #update mask in observation
+        self.observation[:,0]=self.get_legal_actions(self.observation)
+        for i in range(self.n_jobs):
+
+            # third attribute: process time of next scheduled task, set to 0 if taska are finished
+            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
+                self.observation[i,2]=self.norm_with_max(self.job_tasklength_matrix[i][self.count_finished_tasks_job_matrix[i]],self.longest_tasklength)
+            else:
+                self.observation[i,2]= 0
+            #fourth attribute: process on current job in percent
+            self.observation[i,3]=self.norm_with_max(self.processed_and_max_time_job_matrix[i][0],self.processed_and_max_time_job_matrix[i][1])
+            # count finished tasks// normalized
+            self.observation[i][4]=self.norm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)
+        self.observation[:,1]=np.zeros(self.n_jobs+1)   
+        for i in range(self.n_machines):
+            # time to next machine available
+            self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
+            # second attribute: current time left on current task, if task is not assigned it got value 0: todo: checkout it 0 or full time makes sense
+            if math.isnan(self.current_machines_status[i,0])==False:
+                #print(self.current_machines_status[i,0])
+                self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
+        info="everything fine"
+        state=self.observation_to_state(self.observation)
+
+        ## insert: update timestemp if there is no legal action left
+        while True not in self.get_legal_actions(self.observation):
+            #print("go to next timestemp possible")
             #implement to jump to next timestemp
             #check if done? todo: add aditional checks like are all tasks done and satisfied or just problems with timestemp?
             if not self.timestemp_list:
+                #print("finished")
                 # this is reward to mini makespan: todo:implement utilisation etc.
                 reward=-self.current_timestep
                 self.done=True
+                break
             else:
+                #print("update step")
                 # temp. saving timestep
                 forward_timestep=self.current_timestep
-
                 self.timestemp_list.sort()
-                
                 self.current_timestep=self.timestemp_list.pop(0)
+                #print(f"curr timestep: {self.current_timestep}")
                 #print(f"new time is {self.current_timestep}")
                 # how large is the timestep?
                 forward_timestep=self.current_timestep-forward_timestep
@@ -202,67 +248,7 @@ class jss_lite(gym.Env):
                             #    raise ValueError(f"Problems with left over time for task is {self.current_machines_status[i,1]} not 0") 
                             self.count_finished_tasks_job_matrix[job]+=1
                             self.count_finished_tasks_machine_matrix[i]+=1 
-        else:        
-            # assign task (from action) to available machine and update the machine status
-            #set task length:
 
-            #self.processed_and_max_time_job_matrix[action,1]=self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]]
-            #self.processed_and_max_time_job_matrix[action,0]=0
-
-            # block the free machine with current job
-            #todo: delete error
-            if math.isnan(self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],0])==False:
-                #print(self.current_machines_status)
-                #print(self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],0])
-                raise ValueError("machine is not free") 
-            self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],0]=action
-            self.current_machines_status[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],1]=self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]]
-            # update production_list:(job,tas,start,finish)
-            #self.production_list[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],self.count_finished_tasks_job_matrix[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]]]]=(action,self.count_finished_tasks_job_matrix[action],self.current_timestep,self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
-            self.production_list[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]],int(self.count_finished_tasks_machine_matrix[self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]]])]=(action,self.count_finished_tasks_job_matrix[action],self.current_timestep,self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
-            # add end time to timestemp list, first check if value is not already in list:
-            if self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]] not in self.timestemp_list:
-                self.timestemp_list.append(self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
-        # update observation:
-
-        # action_mask=np.full((self.n_jobs+1,),False)
-        # avail_machines=[]
-        # for i in range(self.n_machines):
-        #     if math.isnan(self.current_machines_status[i][0]):
-        #         avail_machines.append(i)
-        # for i in range(self.n_jobs):
-        #     #obs i 5 is normed count of finished tasks
-        #     if self.job_machine_matrix[i][self.denorm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)] in avail_machines:
-        #         action_mask[i]=True
-        
-        
-    
-        #self.observation[:,0]=action_mask
-        #update mask in observation
-        self.observation[:,0]=self.get_legal_actions(self.observation)
-        for i in range(self.n_jobs):
-
-            # third attribute: process time of next scheduled task, set to 0 if taska are finished
-            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
-                self.observation[i,2]=self.norm_with_max(self.job_tasklength_matrix[i][self.count_finished_tasks_job_matrix[i]],self.longest_tasklength)
-            else:
-                self.observation[i,2]= 0
-            #fourth attribute: process on current job in percent
-            self.observation[i,3]=self.norm_with_max(self.processed_and_max_time_job_matrix[i][0],self.processed_and_max_time_job_matrix[i][1])
-            # count finished tasks// normalized
-            self.observation[i][4]=self.norm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)
-
-        self.observation[:,1]=np.zeros(self.n_jobs+1)   
-
-        for i in range(self.n_machines):
-            # time to next machine available
-            self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-            # second attribute: current time left on current task, if task is not assigned it got value 0: todo: checkout it 0 or full time makes sense
-            if math.isnan(self.current_machines_status[i,0])==False:
-                #print(self.current_machines_status[i,0])
-                self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-        info="everything fine"
-        state=self.observation_to_state(self.observation)
         return state, reward, self.done, info
 
     def reset(self):
@@ -370,8 +356,8 @@ class jss_lite(gym.Env):
 
                 #if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and i not in self.current_machines_status[:,0]: 
                     action_mask[i]=True
-        if True not in action_mask and self.done ==False:
-            action_mask[self.n_jobs]=True
+        #if True not in action_mask and self.done ==False:
+        #    action_mask[self.n_jobs]=True
         return action_mask
 
     def norm_with_max(self,value,max_value):
