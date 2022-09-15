@@ -323,26 +323,38 @@ class jss_lite(gym.Env):
 
                 #if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and i not in self.current_machines_status[:,0]: 
                     action_mask[i]=True
+                    # here goes the dummy tasks
+                    finished_tasks=[]
+                    action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
+                    for j in range(self.n_machines):
+                        if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
+                            finished_tasks.append(self.current_machines_status[j,0])
+                    for j in finished_tasks:
+                        j=int(j)
+                        if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
+                            if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
+                                action_mask[i+self.n_jobs]=True    
+
         #if True not in action_mask and self.done ==False:
         #    action_mask[self.n_jobs]=True
 
         # here comes the definitions for dummy actions:
         
-        for i in range(self.n_jobs):
-            #you can only block if the action is set legal before
-            if action_mask[i]==True:
-                # set dummy action to true if a job could finish within the time the actual job is proceeded and the overall left processing time of the stopped action->job is smaller(how much?) than the who finished:
-                # todo: clean this up
-                finished_tasks=[]
-                action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
-                for j in range(self.n_machines):
-                    if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
-                        finished_tasks.append(self.current_machines_status[j,0])
-                for j in finished_tasks:
-                    j=int(j)
-                    if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
-                        if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
-                            action_mask[i+self.n_jobs]=True    
+        # for i in range(self.n_jobs):
+        #     #you can only block if the action is set legal before
+        #     if action_mask[i]==True:
+        #         # set dummy action to true if a job could finish within the time the actual job is proceeded and the overall left processing time of the stopped action->job is smaller(how much?) than the who finished:
+        #         # todo: clean this up
+        #         finished_tasks=[]
+        #         action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
+        #         for j in range(self.n_machines):
+        #             if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
+        #                 finished_tasks.append(self.current_machines_status[j,0])
+        #         for j in finished_tasks:
+        #             j=int(j)
+        #             if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
+        #                 if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
+        #                     action_mask[i+self.n_jobs]=True    
         return action_mask
 
     def norm_with_max(self,value,max_value):
