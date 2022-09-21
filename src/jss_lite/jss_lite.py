@@ -31,7 +31,8 @@ class jss_lite(gym.Env):
         # list for actions which are blocked for the current timestep
         self.blocked_actions=[]
         #check if correct instance path is provided and if standard convention of the instance file is followed:
-
+        # counter for invalid actions:
+        self.invalid_actions=0
         #get_self: n_jobs,n_machines
         #instance_path = "/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/standard/abz5.txt"
         
@@ -89,7 +90,7 @@ class jss_lite(gym.Env):
             #   -   max(2*self.n_jobs,self.n_machines)*6          
         self.observation_space = gym.spaces.Dict({
                 "obs": gym.spaces.Box(low=0.0,high=1.0,
-                    shape=(72,),dtype=np.float64),
+                    shape=(max(2*self.n_jobs,self.n_machines)*6,),dtype=np.float64),
                 "action_mask": gym.spaces.Box(0,1,shape=(self.action_space.n,),dtype=np.int32)  
                                                 }
                                                 )
@@ -172,11 +173,19 @@ class jss_lite(gym.Env):
     def step(self,action:int) -> (np.ndarray, float, bool, dict):
         reward=0
         # update action mask from observation
-        
+        self.observation[:,0]=self.get_legal_actions(self.observation)
+        print(action)
+        print(self.observation[:,0])  
+        print(self.observation[action,0])
         if self.observation[action,0]==False:
-            raise ValueError("action is not in legal actions: implement to do nothing...")
+            self.invalid_actions+=1
+            # some agents use invalid actions: implement following influence to environment here
+            #print(action)
+            #print(self.get_legal_actions("g"))
+            #print(self.get_legal_actions("g")[action])
+            #raise ValueError("action is not in legal actions: implement to do nothing...")
         # as long timestemp list is not empty and action is a real and no dummy action; todo: implement if statement for dummy action
-        if action < self.n_jobs:
+        elif action < self.n_jobs:
             #assure that it is no dummy job   
             # assign task (from action) to available machine and update the machine status
             # block the free machine with current job
@@ -248,7 +257,7 @@ class jss_lite(gym.Env):
                     #check if machine is active, active if 0th entry is not nan
                     if math.isnan(self.current_machines_status[i,0])==False:
                         job=int(self.current_machines_status[i,0])
-                        self.processed_and_max_time_job_matrix[i,0]=self.processed_and_max_time_job_matrix[i,0]+forward_timestep
+                        self.processed_and_max_time_job_matrix[job,0]=self.processed_and_max_time_job_matrix[job,0]+forward_timestep
                         # leftover time for task on machine i
                         self.current_machines_status[i,1]-=forward_timestep
                         #total time of machine working
@@ -279,10 +288,10 @@ class jss_lite(gym.Env):
         return deepcopy(self)
 
     def set_state(self, state):
-        print(state)
+        out=OrderedDict({"action_mask":state.get_legal_actions(state.observation),"obs":(np.ravel(state.observation))})
         self= deepcopy(state)
-        return OrderedDict({"obs":(np.ravel(self.observation)),"action_mask":self.get_legal_actions(self.observation)})
-
+        #return OrderedDict({"action_mask":self.get_legal_actions(self.observation),"obs":(np.ravel(self.observation))})
+        return out
     def render(self,x_bar="Machine",y_bar="Job",start_count=0):
         # is not time critical function. so O(n^2) is no problem; todo:make more pretty
         def production_to_dict(input,i,j):
@@ -382,18 +391,23 @@ class jss_lite(gym.Env):
         if max_value==0:
             return 0
         else:
-            return round(value/max_value,4)
+            out=round(value/max_value,4)
+            if out > 1:
+                print(value)
+                print(max_value)
+                raise ValueError("normalize did not work")
+            return out
 
     def denorm_with_max(self,normed_value,max_value):
         return math.ceil(normed_value*max_value)
         
-    def observation_to_state(self):
+    def observation_to_state(self) -> np.ndarray:
         # here comes the transformation to returned observation 
         #todo: complete function
         #state=np.concatenate(np.ravel(obs[0:n_jobs+1,0]),np.ravel(obs[0:n_jobs,1:4]),np.ravel(obs[0:n_machines,5]),axis=None)
         #state=self.observation
         #state= OrderedDict({"obs":(np.ravel(self.observation)),"action_mask":self.get_legal_actions(self.observation)})
-        state= OrderedDict({"obs":((self.observation)),"action_mask":self.get_legal_actions(self.observation)})
+        state= OrderedDict({"action_mask":self.get_legal_actions(self.observation),"obs":((np.ravel(self.observation)))})
         return state
     # debugging method to check the plausiblity of the production plan
     def check_production_plan(self):
@@ -422,7 +436,6 @@ class jss_lite(gym.Env):
                 self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
           
 
-
     def reset(self):
             self.timestemp_list=[]
             self.done=False
@@ -439,11 +452,11 @@ class jss_lite(gym.Env):
             self.schedule_plan=None
 
             self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float64)
-
+            self.invalid_actions=0
             # reset observation
             # first row is legal action mask
             #todo: check if n_jobs << n_machines
-            self.observation[:,0]=np.full((2*self.n_jobs,),True)
+            self.observation[0:2*self.n_jobs,0]=np.full((2*self.n_jobs,),True)
             # set dummy actions to False
             self.observation[self.n_jobs:][0]=False
             self.current_timestep=0
