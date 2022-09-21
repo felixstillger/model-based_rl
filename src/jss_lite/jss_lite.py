@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import pandas as pd
 import gym
 import numpy as np
@@ -6,7 +7,9 @@ import math
 import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
+from collections import OrderedDict
 import time
+from copy import deepcopy
 class jss_lite(gym.Env):
 
     def __init__(self, instance_path=None):
@@ -85,9 +88,9 @@ class jss_lite(gym.Env):
             #   - time which this machine has to be running in total // normalized by all jobs: beginning-> 1, finish ->0
             #   -             
         self.observation_space = gym.spaces.Dict({
-                "action_mask": gym.spaces.Box(0, 1, shape=(self.action_space.n,), dtype=np.int32),
+                "action_mask": gym.spaces.Box(0,1, shape=(self.action_space.n,),dtype=np.float32),
                 "obs": gym.spaces.Box(low=0.0,high=1.0,
-                    shape=self.observation_space_shape,dtype=np.float64)    
+                    shape=(max(2*self.n_jobs,self.n_machines)*6,),dtype=np.float32)    
                                                 }
                                                 )
         #extended parameters
@@ -101,8 +104,8 @@ class jss_lite(gym.Env):
         # starting point
         #self.timestemp_list.append(0)
     
-        # inital observation
-        self.observation= np.zeros(shape=self.observation_space_shape)
+        # initial observation
+        self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float32)
         # first row is legal action mask
         #todo: check if n_jobs << n_machines
         self.observation[:,0]=np.full((2*self.n_jobs,),True)
@@ -166,7 +169,8 @@ class jss_lite(gym.Env):
             # time to next machine available
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
                     # 
-    def step(self,action):
+        
+    def step(self,action:int) -> (np.ndarray, float, bool, dict):
         reward=0
         # update action mask from observation
         
@@ -216,9 +220,6 @@ class jss_lite(gym.Env):
             if math.isnan(self.current_machines_status[i,0])==False:
                 #print(self.current_machines_status[i,0])
                 self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-        info="everything fine"
-        state=self.observation_to_state(self.observation)
-        ## insert: update timestemp if there is no legal action left
         self.observation[:,0]=self.get_legal_actions(self.observation)
 
         while True not in self.observation[:,0]:
@@ -262,13 +263,26 @@ class jss_lite(gym.Env):
                             #    raise ValueError(f"Problems with left over time for task is {self.current_machines_status[i,1]} not 0") 
                             self.count_finished_tasks_job_matrix[job]+=1
                             self.count_finished_tasks_machine_matrix[i]+=1 
-            self.observation[:,0]=self.get_legal_actions(self.observation)
+
+
+        info = {
+            'action': action
+        }
+        self.observation[:,0]=self.get_legal_actions(self.observation)
+        state=self.observation_to_state()
+        ## insert: update timestemp if there is no legal action left
+        
+
         return state, reward, self.done, info
 
-    def get_state():
-        pass
-    def set_state():
-        pass
+    def get_state(self):
+        return deepcopy(self)
+
+    def set_state(self, state):
+        print(state)
+        self= deepcopy(state)
+        return OrderedDict({"obs":(np.ravel(self.observation)),"action_mask":self.get_legal_actions(self.observation)})
+
     def render(self,x_bar="Machine",y_bar="Job",start_count=0):
         # is not time critical function. so O(n^2) is no problem; todo:make more pretty
         def production_to_dict(input,i,j):
@@ -308,7 +322,7 @@ class jss_lite(gym.Env):
         return df_render, fig
 
     def get_legal_actions(self,obs):
-        action_mask=np.full((2*self.n_jobs,),False)
+        action_mask=np.full((2*self.n_jobs,),False,dtype=np.float32)
         avail_machines=[]
         for i in range(self.n_machines):
             if math.isnan(self.current_machines_status[i][0]):
@@ -354,23 +368,34 @@ class jss_lite(gym.Env):
         #             j=int(j)
         #             if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
         #                 if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
-        #                     action_mask[i+self.n_jobs]=True    
+        #                     action_mask[i+self.n_jobs]=True
+        #if True not in action_mask:
+        #    print(self.current_timestep)
+        #    self.render()
+        #    print(self.done)
+        #    print(self.timestemp_list)
+        #    raise ValueError("Error")
         return action_mask
 
     def norm_with_max(self,value,max_value):
         # just a function to norm towards a max value to use the same round metric and to get values between 0 and 1
-        return round(value/max_value,4)
+        if max_value==0:
+            return 0
+        else:
+            return round(value/max_value,4)
 
     def denorm_with_max(self,normed_value,max_value):
         return math.ceil(normed_value*max_value)
         
-    def observation_to_state(self,obs):
+    def observation_to_state(self):
+        # here comes the transformation to returned observation 
         #todo: complete function
         #state=np.concatenate(np.ravel(obs[0:n_jobs+1,0]),np.ravel(obs[0:n_jobs,1:4]),np.ravel(obs[0:n_machines,5]),axis=None)
-        state=obs
+        #state=self.observation
+        state= OrderedDict({"obs":(np.ravel(self.observation)),"action_mask":self.get_legal_actions(self.observation)})
         return state
     # debugging method to check the plausiblity of the production plan
-    def check_prouction_plan(self):
+    def check_production_plan(self):
         pass
 
     def reset(self):
@@ -387,7 +412,7 @@ class jss_lite(gym.Env):
             self.observation=None
             # schedule plan for visualisation
             self.schedule_plan=None
-            self.observation= np.zeros(shape=self.observation_space_shape)
+            self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float32)
             # reset observation
             # first row is legal action mask
             #todo: check if n_jobs << n_machines
@@ -416,4 +441,4 @@ class jss_lite(gym.Env):
             for i in range(self.n_machines):
                 # time to next machine available
                 self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-            return self.observation
+            return self.observation_to_state()
