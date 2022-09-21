@@ -173,12 +173,12 @@ class jss_lite(gym.Env):
     def step(self,action:int) -> (np.ndarray, float, bool, dict):
         reward=0
         # update action mask from observation
+        if self.done==False and True not in self.get_legal_actions(self.observation):
+            print("problemo")
         self.observation[:,0]=self.get_legal_actions(self.observation)
-        print(action)
-        print(self.observation[:,0])  
-        print(self.observation[action,0])
         if self.observation[action,0]==False:
             self.invalid_actions+=1
+            print(self.invalid_actions)
             # some agents use invalid actions: implement following influence to environment here
             #print(action)
             #print(self.get_legal_actions("g"))
@@ -280,14 +280,17 @@ class jss_lite(gym.Env):
         self.observation[:,0]=self.get_legal_actions(self.observation)
         state=self.observation_to_state()
         ## insert: update timestemp if there is no legal action left
-        
+        if self.done==False and True not in self.get_legal_actions(self.observation):
+            print("problemo")
 
         return state, reward, self.done, info
 
     def get_state(self):
+        print("state getted")
         return deepcopy(self)
 
     def set_state(self, state):
+        print("state setted")
         out=OrderedDict({"action_mask":state.get_legal_actions(state.observation),"obs":(np.ravel(state.observation))})
         self= deepcopy(state)
         #return OrderedDict({"action_mask":self.get_legal_actions(self.observation),"obs":(np.ravel(self.observation))})
@@ -437,6 +440,7 @@ class jss_lite(gym.Env):
           
 
     def reset(self):
+            print("state resetet")
             self.timestemp_list=[]
             self.done=False
             #stores quatuple(job,task,start_time,finish_time) 
