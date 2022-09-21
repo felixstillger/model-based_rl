@@ -86,11 +86,11 @@ class jss_lite(gym.Env):
 
         # observation space contains for every machine:
             #   - time which this machine has to be running in total // normalized by all jobs: beginning-> 1, finish ->0
-            #   -             
+            #   -   max(2*self.n_jobs,self.n_machines)*6          
         self.observation_space = gym.spaces.Dict({
-                "action_mask": gym.spaces.Box(0,1, shape=(self.action_space.n,),dtype=np.float32),
                 "obs": gym.spaces.Box(low=0.0,high=1.0,
-                    shape=(max(2*self.n_jobs,self.n_machines)*6,),dtype=np.float32)    
+                    shape=(72,),dtype=np.float64),
+                "action_mask": gym.spaces.Box(0,1,shape=(self.action_space.n,),dtype=np.int32)  
                                                 }
                                                 )
         #extended parameters
@@ -105,15 +105,14 @@ class jss_lite(gym.Env):
         #self.timestemp_list.append(0)
     
         # initial observation
-        self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float32)
+        self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float64)
         # first row is legal action mask
         #todo: check if n_jobs << n_machines
         self.observation[:,0]=np.full((2*self.n_jobs,),True)
-        # set skip timestep to False
+        # set skip waiting to False
         self.observation[self.n_jobs:][0]=False
         self.current_timestep=0
 
-        
 
         self.longest_tasklength=np.amax(self.job_tasklength_matrix)
         # first entry stores active processed time of job, second entry overall task time
@@ -263,6 +262,7 @@ class jss_lite(gym.Env):
                             #    raise ValueError(f"Problems with left over time for task is {self.current_machines_status[i,1]} not 0") 
                             self.count_finished_tasks_job_matrix[job]+=1
                             self.count_finished_tasks_machine_matrix[i]+=1 
+                self.observation[:,0]=self.get_legal_actions(self.observation)
 
 
         info = {
@@ -322,7 +322,7 @@ class jss_lite(gym.Env):
         return df_render, fig
 
     def get_legal_actions(self,obs):
-        action_mask=np.full((2*self.n_jobs,),False,dtype=np.float32)
+        action_mask=np.full((2*self.n_jobs,),False,dtype=np.float64)
         avail_machines=[]
         for i in range(self.n_machines):
             if math.isnan(self.current_machines_status[i][0]):
@@ -392,11 +392,36 @@ class jss_lite(gym.Env):
         #todo: complete function
         #state=np.concatenate(np.ravel(obs[0:n_jobs+1,0]),np.ravel(obs[0:n_jobs,1:4]),np.ravel(obs[0:n_machines,5]),axis=None)
         #state=self.observation
-        state= OrderedDict({"obs":(np.ravel(self.observation)),"action_mask":self.get_legal_actions(self.observation)})
+        #state= OrderedDict({"obs":(np.ravel(self.observation)),"action_mask":self.get_legal_actions(self.observation)})
+        state= OrderedDict({"obs":((self.observation)),"action_mask":self.get_legal_actions(self.observation)})
         return state
     # debugging method to check the plausiblity of the production plan
     def check_production_plan(self):
         pass
+    def update_observation(self):
+        self.observation[:,0]=self.get_legal_actions(self.observation)  
+        for i in range(self.n_jobs):
+            # second attribute: current time left on current task:
+            self.observation[i,1]=self.norm_with_max(0,self.longest_tasklength)
+            # third attribute: process time of next scheduled task
+            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
+                self.observation[i,2]=self.norm_with_max(self.job_tasklength_matrix[i][self.count_finished_tasks_job_matrix[i]],self.longest_tasklength)
+            else:
+                self.observation[i,2]= 0
+            #fourth attribute: process on current job in percent
+            self.observation[i,3]=self.norm_with_max(self.processed_and_max_time_job_matrix[i][0],self.processed_and_max_time_job_matrix[i][1])
+
+            # count finished tasks// normalized
+            self.observation[i][4]=self.norm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)
+        for i in range(self.n_machines):
+            # time to next machine available
+            self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
+            # second attribute: current time left on current task, if task is not assigned it got value 0: todo: checkout it 0 or full time makes sense
+            if math.isnan(self.current_machines_status[i,0])==False:
+                #print(self.current_machines_status[i,0])
+                self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
+          
+
 
     def reset(self):
             self.timestemp_list=[]
@@ -412,7 +437,9 @@ class jss_lite(gym.Env):
             self.observation=None
             # schedule plan for visualisation
             self.schedule_plan=None
-            self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float32)
+
+            self.observation= np.zeros(shape=self.observation_space_shape,dtype=np.float64)
+
             # reset observation
             # first row is legal action mask
             #todo: check if n_jobs << n_machines
@@ -427,8 +454,6 @@ class jss_lite(gym.Env):
             self.processed_and_max_time_job_matrix=np.zeros((self.n_jobs,2))
             for i in range(self.n_jobs):
                 self.processed_and_max_time_job_matrix[i][1]=sum(self.job_tasklength_matrix[i])
-
-
             for i in range(self.n_jobs):
                 # second attribute: current time left on current task:
                 self.observation[i,1]=self.norm_with_max(0,self.longest_tasklength)
