@@ -176,10 +176,9 @@ class jss_lite(gym.Env):
         # update action mask from observation
         # if self.done==False and True not in self.get_legal_actions(self.observation):
         #     print("problemo")
-        # self.observation[:,0]=self.get_legal_actions(self.observation)
-        if self.get_legal_actions(self.observation)[action]==0:
+        if self.observation[action,0]==0:
+        #if self.get_legal_actions(self.observation)[action]==0:
             self.invalid_actions+=1
-
         #     print(self.invalid_actions)
             # some agents use invalid actions: implement following influence to environment here
             #print(action)
@@ -279,11 +278,9 @@ class jss_lite(gym.Env):
         info = {
             'action': action
         }
-        self.observation[:,0]=self.get_legal_actions(self.observation)
+        #self.observation[:,0]=self.get_legal_actions(self.observation)
         state=self.observation_to_state()
         ## insert: update timestemp if there is no legal action left
-        if self.done==False and True not in self.get_legal_actions(self.observation):
-            print("problemo")
 
         return state, reward, self.done, info
 
