@@ -201,16 +201,9 @@ class jss_lite(gym.Env):
             # add end time to timestemp list, first check if value is not already in list:
             if self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]] not in self.timestemp_list:
                 self.timestemp_list.append(self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
-        else: #action is dummy action
-            # get action to block, r_action 
-            r_action=action-self.n_jobs
-            # append action to the blocked actions
-            self.blocked_actions.append(r_action)              
-        # update observation:
-        #update mask in observation
 
-        #self.observation[:,0]=self.get_legal_actions(self.observation)
-        for i in range(self.n_jobs):
+            #update action in observation and coresponding machine in observation:
+            i=action
 
             # third attribute: process time of next scheduled task, set to 0 if taska are finished
             if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
@@ -221,15 +214,24 @@ class jss_lite(gym.Env):
             self.observation[i,3]=self.norm_with_max(self.processed_and_max_time_job_matrix[i][0],self.processed_and_max_time_job_matrix[i][1])
             # count finished tasks// normalized
             self.observation[i][4]=self.norm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)
-        self.observation[:,1]=np.zeros(2*self.n_jobs)   
-        for i in range(self.n_machines):
+            self.observation[i,1]=0 
+            
+            i=self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]]
             # time to next machine available
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
             # second attribute: current time left on current task, if task is not assigned it got value 0: todo: checkout it 0 or full time makes sense
             if math.isnan(self.current_machines_status[i,0])==False:
                 #print(self.current_machines_status[i,0])
-                self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-        
+                self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)    
+        else: #action is dummy action
+            # get action to block, r_action 
+            r_action=action-self.n_jobs
+            # append action to the blocked actions
+            self.blocked_actions.append(r_action)              
+        # update observation:
+        #update mask in observation
+
+        #self.observation[:,0]=self.get_legal_actions(self.observation)
         self.observation[:,0]=self.get_legal_actions(self.observation)
         while True not in self.observation[:,0]:
             #print("go to next timestemp possible")
