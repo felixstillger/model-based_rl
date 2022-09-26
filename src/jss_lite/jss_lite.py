@@ -179,7 +179,7 @@ class jss_lite(gym.Env):
         if self.observation[action,0]==0:
         #if self.get_legal_actions(self.observation)[action]==0:
             self.invalid_actions+=1
-        #     print(self.invalid_actions)
+            print(self.invalid_actions)
             # some agents use invalid actions: implement following influence to environment here
             #print(action)
             #print(self.get_legal_actions("g"))
