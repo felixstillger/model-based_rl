@@ -229,6 +229,32 @@ class jss_lite(gym.Env):
             # append action to the blocked actions
             self.blocked_actions.append(r_action)              
         # update observation:
+
+        """
+            for i in range(self.n_jobs):
+
+                # third attribute: process time of next scheduled task, set to 0 if taska are finished
+                if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
+                    self.observation[i,2]=self.norm_with_max(self.job_tasklength_matrix[i][self.count_finished_tasks_job_matrix[i]],self.longest_tasklength)
+                else:
+                    self.observation[i,2]= 0
+                #fourth attribute: process on current job in percent
+                self.observation[i,3]=self.norm_with_max(self.processed_and_max_time_job_matrix[i][0],self.processed_and_max_time_job_matrix[i][1])
+                # count finished tasks// normalized
+                self.observation[i][4]=self.norm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)
+                self.observation[i,1]=0 
+            for i in range(self.n_machines)
+                
+                # time to next machine available
+                self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
+                # second attribute: current time left on current task, if task is not assigned it got value 0: todo: checkout it 0 or full time makes sense
+                if math.isnan(self.current_machines_status[i,0])==False:
+                    #print(self.current_machines_status[i,0])
+                    self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)    
+
+        """
+
+
         #update mask in observation
 
         #self.observation[:,0]=self.get_legal_actions(self.observation)
