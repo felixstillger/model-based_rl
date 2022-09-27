@@ -28,8 +28,6 @@ class jss_lite(gym.Env):
         self.done=False
         # parameter to save current observation
         self.observation=None
-        # schedule plan for visualisation
-        self.schedule_plan=None
         # list for actions which are blocked for the current timestep
         self.blocked_actions=[]
         #check if correct instance path is provided and if standard convention of the instance file is followed:
@@ -82,7 +80,8 @@ class jss_lite(gym.Env):
         self.observation_space = gym.spaces.Dict({
                 "action_mask": gym.spaces.Box(0,1,shape=(self.action_space.n,),dtype=np.int32),
                 "obs": gym.spaces.Box(low=0.0,high=1.0,
-                    shape=(max(2*self.n_jobs,self.n_machines)*6,),dtype=np.float64) 
+                    shape=(max(2*self.n_jobs,self.n_machines)*6,),dtype=np.float64)
+                     
                                                 }
                                                 )
         #extended parameters
@@ -145,7 +144,11 @@ class jss_lite(gym.Env):
         # set skip timestep to False
         self.observation[self.n_jobs][0]=False
         """
+
         self.update_observation()
+        self.observation[0:2*self.n_jobs,0]=np.full((2*self.n_jobs,),True)
+        # set dummy actions to False
+        self.observation[self.n_jobs:][0]=False
         """
         for i in range(self.n_jobs):
             # second attribute: current time left on current task:
@@ -191,7 +194,9 @@ class jss_lite(gym.Env):
             # get action to block, r_action 
             r_action=action-self.n_jobs
             # append action to the blocked actions
-            self.blocked_actions.append(r_action)              
+            self.blocked_actions.append(r_action)
+            # add here timestemp to     
+            self.timestemp_list.append(self.current_timestep+self.job_tasklength_matrix[r_action,self.count_finished_tasks_job_matrix[r_action]])         
         # update observation:
 
         """
@@ -230,6 +235,13 @@ class jss_lite(gym.Env):
             if not self.timestemp_list:
                 #print("finished")
                 # this is reward to mini makespan: todo:implement utilisation etc.
+                for row in self.production_list:
+                    if None in row:
+                        print(self.count_finished_tasks_job_matrix)
+
+
+
+                        raise ValueError("done = true but production did not finished; problem")
                 reward=-self.current_timestep
                 self.done=True
                 break
@@ -376,7 +388,7 @@ class jss_lite(gym.Env):
                             finished_tasks.append(self.current_machines_status[j,0])
                     for j in finished_tasks:
                         j=int(j)
-                        if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
+                        if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1 and self.current_timestep!=0:
                             if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
                                 #True
                                 action_mask[i+self.n_jobs]=1    
@@ -400,6 +412,23 @@ class jss_lite(gym.Env):
         # here comes the transformation to returned observation 
         #todo: complete function
         status= {"obs":((np.ravel(self.observation)).astype(np.float32)),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
+        # obs=[]
+        # for row in self.production_list:
+        #     for entry in row:
+        #         if type(entry) is tuple:
+        #             for number in entry:
+        #                 obs.append(number)
+        #         else:
+        #             obs.append(0)
+        #             obs.append(0)
+        #             obs.append(0)
+        #             obs.append(0)
+        #             # obs.append(np.nan)
+        #             # obs.append(np.nan)
+        #             # obs.append(np.nan)
+        #             # obs.append(np.nan)
+        # status= {"obs":((np.ravel(obs)).astype(np.float32)),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
+
         return status
     # debugging method to check the plausiblity of the production plan
     def check_production_plan(self):
@@ -458,8 +487,6 @@ class jss_lite(gym.Env):
         # starting point
         # parameter to save current observation
         self.observation=None
-        # schedule plan for visualisation
-        self.schedule_plan=None
         # reset current machine status:
         self.current_machines_status=np.zeros((self.n_machines,3))
         # set current job to nan because no job is assigned to the machines
@@ -469,15 +496,18 @@ class jss_lite(gym.Env):
         # reset observation
         # first row is legal action mask
         #todo: check if n_jobs << n_machines
-        self.observation[0:2*self.n_jobs,0]=np.full((2*self.n_jobs,),True)
-        # set dummy actions to False
-        self.observation[self.n_jobs:][0]=False
+
         self.current_timestep=0
         ## todo:assure that tasks is right!
         self.n_tasks=self.job_tasklength_matrix.shape[1]
         self.longest_tasklength=np.amax(self.job_tasklength_matrix)
         # first entry stores active processed time of job, second entry overall task time
         self.processed_and_max_time_job_matrix=np.zeros((self.n_jobs,2))
+        self.update_observation()
+        self.observation[0:2*self.n_jobs,0]=np.full((2*self.n_jobs,),True)
+        # set dummy actions to False
+        self.observation[self.n_jobs:][0]=False
+        """
         for i in range(self.n_jobs):
             self.processed_and_max_time_job_matrix[i][1]=sum(self.job_tasklength_matrix[i])
         for i in range(self.n_jobs):
@@ -492,5 +522,9 @@ class jss_lite(gym.Env):
         for i in range(self.n_machines):
             # time to next machine available
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-        #return self.observation_to_state()
-        return {"obs":(np.ravel(self.observation)).astype(np.float32),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
+            """
+        return self.observation_to_state()
+        #return {"obs":(np.ravel(self.observation)).astype(np.float32),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
+    
+    def setup():
+        pass

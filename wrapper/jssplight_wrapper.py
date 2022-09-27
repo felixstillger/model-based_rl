@@ -25,6 +25,10 @@ class jssp_light_obs_wrapper(gym.ObservationWrapper):
     def get_state(self):
         return deepcopy(self.env)
 
+    
+    def render(self,x_bar="Machine",y_bar="Job",start_count=0):
+        self.env.render(x_bar=x_bar,y_bar=y_bar,start_count=0)
+
     def set_state(self, state):
         self.env = deepcopy(state)
         obs = np.ravel(self.env.observation)
@@ -84,6 +88,6 @@ class Jssp_light_wrapper(gym.Env):
     def get_state(self):
         return deepcopy(self.env)
     
-    def render(self):
-        self.env.render()
+    def render(self,x_bar="Machine",y_bar="Job",start_count=0):
+        self.env.render(x_bar=x_bar,y_bar=y_bar,start_count=0)
 
