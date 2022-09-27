@@ -78,18 +78,7 @@ class jss_lite(gym.Env):
         self.action_space_shape=(2*self.n_jobs)
         #' gym relevant stuff:
         # action space contains assignment of task from job to machine
-        self.action_space = gym.spaces.Discrete(self.action_space_shape) 
-        # observation space contains for every job:
-            #   - task can be assigned (previouse task of job is finished! and machine is free -> legal action mask)
-            #   - process time for next task // normalized by longest task over all jobs
-            #   - seconds this job needs in best case // normalized by longest job
-
-            #   - earliest time next task from different job needs this machine
-            #   - smth. like % of next task or duration of task
-
-        # observation space contains for every machine:
-            #   - time which this machine has to be running in total // normalized by all jobs: beginning-> 1, finish ->0
-            #   -   max(2*self.n_jobs,self.n_machines)*6          
+        self.action_space = gym.spaces.Discrete(self.action_space_shape)         
         self.observation_space = gym.spaces.Dict({
                 "action_mask": gym.spaces.Box(0,1,shape=(self.action_space.n,),dtype=np.int32),
                 "obs": gym.spaces.Box(low=0.0,high=1.0,
@@ -156,6 +145,8 @@ class jss_lite(gym.Env):
         # set skip timestep to False
         self.observation[self.n_jobs][0]=False
         """
+        self.update_observation()
+        """
         for i in range(self.n_jobs):
             # second attribute: current time left on current task:
             self.observation[i,1]=self.norm_with_max(0,self.longest_tasklength)
@@ -170,7 +161,7 @@ class jss_lite(gym.Env):
             # time to next machine available
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
                     # 
-        
+        """
     def step(self,action:int):
         reward=0
         # update action mask from observation
@@ -194,24 +185,8 @@ class jss_lite(gym.Env):
             if self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]] not in self.timestemp_list:
                 self.timestemp_list.append(self.current_timestep+self.job_tasklength_matrix[action,self.count_finished_tasks_job_matrix[action]])
             #update action in observation and coresponding machine in observation:
-            i=action
-            # third attribute: process time of next scheduled task, set to 0 if taska are finished
-            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
-                self.observation[i,2]=self.norm_with_max(self.job_tasklength_matrix[i][self.count_finished_tasks_job_matrix[i]],self.longest_tasklength)
-            else:
-                self.observation[i,2]= 0
-            #fourth attribute: process on current job in percent
-            self.observation[i,3]=self.norm_with_max(self.processed_and_max_time_job_matrix[i][0],self.processed_and_max_time_job_matrix[i][1])
-            # count finished tasks// normalized
-            self.observation[i][4]=self.norm_with_max(self.count_finished_tasks_job_matrix[i],self.n_tasks)
-            self.observation[i,1]=0 
-            i=self.job_machine_matrix[action,self.count_finished_tasks_job_matrix[action]]
-            # time to next machine available
-            self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-            # second attribute: current time left on current task, if task is not assigned it got value 0: todo: checkout it 0 or full time makes sense
-            if math.isnan(self.current_machines_status[i,0])==False:
-                #print(self.current_machines_status[i,0])
-                self.observation[int(self.current_machines_status[i,0]),1]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)    
+
+            self.update_observation(action=action)
         else: #action is dummy action
             # get action to block, r_action 
             r_action=action-self.n_jobs
@@ -365,7 +340,6 @@ class jss_lite(gym.Env):
                     finished_tasks=[]
                     action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
                     action_mask[i+self.n_jobs]=1
-                    
                     for j in range(self.n_machines):
                         if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
                             finished_tasks.append(self.current_machines_status[j,0])
@@ -374,8 +348,7 @@ class jss_lite(gym.Env):
                         if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
                             if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
                                 #True
-                                action_mask[i+self.n_jobs]=1
-                                
+                                action_mask[i+self.n_jobs]=1                             
         return action_mask
 
     def get_legal_actions_old(self,obs):
@@ -432,6 +405,16 @@ class jss_lite(gym.Env):
     def check_production_plan(self):
         pass
     def update_observation(self,action=None):
+        # observation space contains for every job:
+            #   - task can be assigned (previouse task of job is finished! and machine is free -> legal action mask)
+            #   - process time for next task // normalized by longest task over all jobs
+            #   - seconds this job needs in best case // normalized by longest job
+
+            #   - earliest time next task from different job needs this machine
+            #   - smth. like % of next task or duration of task
+        # observation space contains for every machine:
+            #   - time which this machine has to be running in total // normalized by all jobs: beginning-> 1, finish ->0
+            #   -   max(2*self.n_jobs,self.n_machines)*6  
         self.observation[:,0]=self.get_legal_actions(self.observation)
         # decide here if you want to update whole observation or just the one influenced by action
         if action ==None:
@@ -464,6 +447,7 @@ class jss_lite(gym.Env):
 
     def reset(self):
         #print("state resetet")
+        self.blocked_actions=[]
         self.timestemp_list=[]
         self.done=False
         #stores quatuple(job,task,start_time,finish_time) 
@@ -508,5 +492,5 @@ class jss_lite(gym.Env):
         for i in range(self.n_machines):
             # time to next machine available
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
-        return self.observation_to_state()
-        #return {"obs":(np.ravel(self.observation)).astype(np.float32),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
+        #return self.observation_to_state()
+        return {"obs":(np.ravel(self.observation)).astype(np.float32),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
