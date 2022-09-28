@@ -36,7 +36,7 @@ class jssp_light_obs_wrapper(gym.ObservationWrapper):
         return {"obs":obs,"action_mask":mask}
    
 
-class jssp_light_obs_wrapper(gym.ObservationWrapper,mode='training',):
+class jssp_light_obs_wrapper(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
         #self.observation_space = gym.spaces.Box(0, 1, (self.n,))

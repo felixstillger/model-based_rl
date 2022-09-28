@@ -45,7 +45,7 @@ class jss_lite(gym.Env):
             self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
             # 
             df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
-            self.optimal_value=(df['Optimal value'][ins])
+            self.optimal_value=(df['Optimal value'][self.instance])
             # here begins instance parser
         if any(x in instance_path for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
             n_line = 0
