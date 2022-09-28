@@ -171,6 +171,7 @@ class jss_lite(gym.Env):
         if self.observation[action,0]==0:
         #check here if invalid actions are done: if needed rise Error here
             self.invalid_actions+=1
+            reward=-1
         # as long timestemp list is not empty and action is a real and no dummy action; todo: implement if statement for dummy action
         elif action < self.n_jobs:
             #assure that it is no dummy job   
@@ -242,7 +243,9 @@ class jss_lite(gym.Env):
 
 
                         raise ValueError("done = true but production did not finished; problem")
-                reward=-self.current_timestep
+                #reward=-self.current_timestep
+                # for ft06 optimal value is 55
+                reward=2*55-self.current_timestep
                 self.done=True
                 break
             else:
