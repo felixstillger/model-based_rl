@@ -43,6 +43,7 @@ class jss_lite(gym.Env):
             raise ValueError("no instance is given")
         else:
             self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
+            # 
             df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
             self.optimal_value=(df['Optimal value'][ins])
             # here begins instance parser
@@ -250,7 +251,7 @@ class jss_lite(gym.Env):
                         raise ValueError("done = true but production did not finished; problem")
                 #reward=-self.current_timestep
                 # for ft06 optimal value is 55
-                reward=2*55-self.current_timestep
+                reward=2*self.optimal_value-self.current_timestep
                 self.done=True
                 break
             else:
