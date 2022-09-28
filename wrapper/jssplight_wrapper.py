@@ -36,6 +36,42 @@ class jssp_light_obs_wrapper(gym.ObservationWrapper):
         return {"obs":obs,"action_mask":mask}
    
 
+class jssp_light_obs_wrapper(gym.ObservationWrapper,mode='training',):
+    def __init__(self, env):
+        super().__init__(env)
+        #self.observation_space = gym.spaces.Box(0, 1, (self.n,))
+        self.action_space = self.env.action_space
+        self.observation_space =gym.spaces.Dict(
+            {
+                'obs':self.env.observation_space['obs'],
+                'action_mask':self.env.observation_space['action_mask'],
+            }
+        )
+        
+    def observation(self, obs):
+        #print(obs)
+        return {"obs": obs['obs'], "action_mask": obs['action_mask']}
+        #return {"obs": new_obs, "action_mask": np.array([1] * self.action_space.n, dtype=np.float32)}
+        #return new_obs
+    def get_state(self):
+        return deepcopy(self.env)
+
+    
+    def render(self,x_bar="Machine",y_bar="Job",start_count=0):
+        self.env.render(x_bar=x_bar,y_bar=y_bar,start_count=0)
+
+    def set_state(self, state):
+        self.env = deepcopy(state)
+        obs = np.ravel(self.env.observation)
+        mask = self.env.get_legal_actions("g")
+        return {"obs":obs,"action_mask":mask}
+
+
+
+
+
+
+
 class Jssp_light_wrapper(gym.Env):
     """
     Wrapper for the custom jssp Problem.
