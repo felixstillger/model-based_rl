@@ -21,7 +21,8 @@ class jss_lite(gym.Env):
         self.job_tasklength_matrix=None
         self.job_length_vector=None
         self.observation_space=None
-
+        self.instance=None
+        self.optimal_value=None
         self.horizon=None
         # stores all timestemps
         self.timestemp_list=[]
@@ -40,6 +41,10 @@ class jss_lite(gym.Env):
             raise FileExistsError(f"File does not exists or {instance_path} is no valid path")
         if instance_path is None:
             raise ValueError("no instance is given")
+        else:
+            self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
+            df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
+            self.optimal_value=(df['Optimal value'][ins])
             # here begins instance parser
         if any(x in instance_path for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
             n_line = 0
@@ -171,7 +176,7 @@ class jss_lite(gym.Env):
         if self.observation[action,0]==0:
         #check here if invalid actions are done: if needed rise Error here
             self.invalid_actions+=1
-            reward=-1
+            #reward=-1
         # as long timestemp list is not empty and action is a real and no dummy action; todo: implement if statement for dummy action
         elif action < self.n_jobs:
             #assure that it is no dummy job   
@@ -361,9 +366,11 @@ class jss_lite(gym.Env):
                     for j in finished_tasks:
                         j=int(j)
                         if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
+                            ## todo comment and rework
                             if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
                                 #True
-                                action_mask[i+self.n_jobs]=1                             
+                                if j != i:
+                                    action_mask[i+self.n_jobs]=1                             
         return action_mask
 
     def get_legal_actions_old(self,obs):
