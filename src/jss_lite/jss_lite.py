@@ -321,12 +321,16 @@ class jss_lite(gym.Env):
                 if self.production_list[i,j] is not None:
                     liste.append(production_to_dict(self.production_list[i,j],i,j))
         df_render=pd.DataFrame(liste)
-        df_render.sort_values(by=y_bar,inplace=True)
-        #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
-        fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
+        if df_render.empty:
+            # do not rise an error; production plan is empty and could be filled
+            print("Production plan is empty; nothing to plot")
+        else:
+            df_render.sort_values(by=y_bar,inplace=True)
+            #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
+            fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
 
-        #todo, save or do smth else to console rendering
-        fig.show()
+            #todo, save or do smth else to console rendering
+            fig.show()
 
     def render_to_df(self,x_bar="Machine",y_bar="Job",start_count=0):
         # is not time critical function. so O(n^2) is no problem; todo:make more pretty
@@ -360,6 +364,34 @@ class jss_lite(gym.Env):
                     # here goes the dummy tasks
                     finished_tasks=[]
                     action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
+                    for j in range(self.n_machines):
+                        if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
+                            finished_tasks.append(self.current_machines_status[j,0])
+                    for j in finished_tasks:
+                        j=int(j)
+                        if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1:
+                            ## todo comment and rework
+                            if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
+                                #True
+                                if j != i:
+                                    action_mask[i+self.n_jobs]=1                             
+        return action_mask
+
+    
+    def get_legal_actions_old(self,obs):
+        action_mask=np.full((2*self.n_jobs,),0,dtype=np.int32)
+        avail_machines=[]
+        for i in range(self.n_machines):
+            if math.isnan(self.current_machines_status[i][0]):
+                avail_machines.append(i)
+        for i in range(self.n_jobs):
+            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
+                if self.job_machine_matrix[i][self.count_finished_tasks_job_matrix[i]] in avail_machines and i not in self.current_machines_status[:,0] and i not in self.blocked_actions: 
+                    #True
+                    action_mask[i]=1
+                    # here goes the dummy tasks
+                    finished_tasks=[]
+                    action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
                     action_mask[i+self.n_jobs]=1
                     for j in range(self.n_machines):
                         if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
@@ -374,36 +406,7 @@ class jss_lite(gym.Env):
                                     action_mask[i+self.n_jobs]=1                             
         return action_mask
 
-    def get_legal_actions_old(self,obs):
-        action_mask=np.full((2*self.n_jobs,),0,dtype=np.int32)
-        avail_machines=[]
-        for i in range(self.n_machines):
-            if math.isnan(self.current_machines_status[i][0]):
-                avail_machines.append(i)
-        #avail_machines=*avail_machines
-        for i in range(self.n_jobs):
-            #obs i 4 is normed count of finished tasks# todo: add here check if current job is finished
-            # todo: check here the constraints
-            #if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and self.processed_and_max_time_job_matrix[i,0]==0 and i not in self.current_machines_status[:,0]:
-            if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:         
-                if self.job_machine_matrix[i][self.count_finished_tasks_job_matrix[i]] in avail_machines and i not in self.current_machines_status[:,0] and i not in self.blocked_actions: 
 
-                #if self.job_machine_matrix[i][self.denorm_with_max(obs[i][4],self.n_tasks)] in avail_machines and i not in self.current_machines_status[:,0]: 
-                    #True
-                    action_mask[i]=1
-                    # here goes the dummy tasks
-                    finished_tasks=[]
-                    action_process_time=self.job_tasklength_matrix[i,self.count_finished_tasks_job_matrix[i]]
-                    for j in range(self.n_machines):
-                        if self.current_machines_status[j,1]>0 and self.current_machines_status[j,1] < action_process_time:
-                            finished_tasks.append(self.current_machines_status[j,0])
-                    for j in finished_tasks:
-                        j=int(j)
-                        if self.count_finished_tasks_job_matrix[j] < self.n_tasks-1 and self.current_timestep!=0:
-                            if self.job_machine_matrix[i,self.count_finished_tasks_job_matrix[i]]== self.job_machine_matrix[j,self.count_finished_tasks_job_matrix[j]+1]:
-                                #True
-                                action_mask[i+self.n_jobs]=1    
-            return action_mask
     def norm_with_max(self,value,max_value):
         # just a function to norm towards a max value to use the same round metric and to get values between 0 and 1
         if max_value==0:
