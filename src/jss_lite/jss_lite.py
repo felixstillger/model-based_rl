@@ -12,7 +12,7 @@ import time
 from copy import deepcopy
 class jss_lite(gym.Env):
 
-    def __init__(self, instance_path=None):
+    def __init__(self, instance_path=None,reward_mode='makespan'):
         #allocate parameters:
         self.n_jobs=None
         self.n_machines=None
@@ -24,6 +24,7 @@ class jss_lite(gym.Env):
         self.instance=None
         self.optimal_value=None
         self.horizon=None
+        
         # stores all timestemps
         self.timestemp_list=[]
         self.done=False
@@ -36,7 +37,8 @@ class jss_lite(gym.Env):
         self.invalid_actions=0
         #get_self: n_jobs,n_machines
         #instance_path = "/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/standard/abz5.txt"
-        
+        # possible modes: "makespan" or "utalisation"; prezized in reward method that returns reward
+        self.reward_mode=reward_mode
         if not exists(instance_path):
             raise FileExistsError(f"File does not exists or {instance_path} is no valid path")
         if instance_path is None:
@@ -171,6 +173,28 @@ class jss_lite(gym.Env):
             self.observation[i][5]=self.norm_with_max(self.current_machines_status[i][1],self.longest_tasklength)
                     # 
         """
+    def get_reward(self,section):
+        # you can implement your own reward styles; there are different sections where reward can occur; if you want to define more sections feel free in the step method
+        # by now sections are: "invalid_action", "next_timestep", "on_step", "on_done"
+        if self.reward_mode=='makespan':
+            if section=='invalid_action':
+                return 0
+            elif section=='next_timestep':
+                return 0
+            elif section =='on_step':
+                return 0
+            elif section =='on_done':
+                return 2*self.optimal_value-self.current_timestep
+            else:
+                raise ValueError(f"section: {section} ist not implemented yet")
+        elif self.reward_mode=='utilisation':
+            pass
+        else:
+            raise ValueError(f"following reward mode: {self.reward_mode} is not defined")
+    
+        reward=self.get_reward(section='invalid_action')
+        
+
     def step(self,action:int):
         reward=0
         # update action mask from observation
@@ -178,6 +202,7 @@ class jss_lite(gym.Env):
         #check here if invalid actions are done: if needed rise Error here
             self.invalid_actions+=1
             #reward=-1
+            reward=self.get_reward(section='invalid_action')
         # as long timestemp list is not empty and action is a real and no dummy action; todo: implement if statement for dummy action
         elif action < self.n_jobs:
             #assure that it is no dummy job   
@@ -251,8 +276,8 @@ class jss_lite(gym.Env):
                         raise ValueError("done = true but production did not finished; problem")
                 #reward=-self.current_timestep
                 # for ft06 optimal value is 55
-                reward=2*self.optimal_value-self.current_timestep
                 self.done=True
+                reward=self.get_reward(section='on_done')
                 break
             else:
                 #print("update step")
@@ -540,5 +565,6 @@ class jss_lite(gym.Env):
         return self.observation_to_state()
         #return {"obs":(np.ravel(self.observation)).astype(np.float32),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
     
+
     def setup():
         pass
