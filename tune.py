@@ -18,8 +18,8 @@ import numpy as np
 #     return env
 
 from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
-instance_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/standard/ft06.txt'
-checkpoint_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/checkpoints_tune'
+instance_path='/resources/jsp_instances/standard/ft06.txt'
+checkpoint_path='/training_checkpoints/checkpoints_tune'
 
 def env_creator(config):
     env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
@@ -33,7 +33,7 @@ tune.register_env('custom_jssp',env_creator)
 tune.run(
     "contrib/AlphaZero",
     stop={"training_iteration": 500},
-    local_dir="/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/checkpoints_tune",
+    local_dir="/training_checkpoints/checkpoints_tune",
     max_failures=0,
     checkpoint_freq = 1,
     config={
