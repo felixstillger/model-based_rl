@@ -46,7 +46,8 @@ class jss_lite(gym.Env):
         else:
             self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
             # 
-            df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
+            #df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
+            df=pd.read_csv('/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
             self.optimal_value=(df['Optimal value'][self.instance])
             # here begins instance parser
         if any(x in instance_path for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
@@ -259,7 +260,7 @@ class jss_lite(gym.Env):
         #update mask in observation
 
         #self.observation[:,0]=self.get_legal_actions(self.observation)
-        self.observation[:,0]=self.get_legal_actions(self.observation)
+        self.observation[:,0]=self.get_legal_actions()
         while True not in self.observation[:,0]:
             #print("go to next timestemp possible")
             #implement to jump to next timestemp
@@ -310,7 +311,7 @@ class jss_lite(gym.Env):
                             #    raise ValueError(f"Problems with left over time for task is {self.current_machines_status[i,1]} not 0") 
                             self.count_finished_tasks_job_matrix[job]+=1
                             self.count_finished_tasks_machine_matrix[i]+=1 
-                self.observation[:,0]=self.get_legal_actions(self.observation)
+                self.observation[:,0]=self.get_legal_actions()
         info = {
             'action': action
         }
@@ -329,7 +330,7 @@ class jss_lite(gym.Env):
         #self= deepcopy(state)
         self=state
         self.done=state.done
-        out=OrderedDict({"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32),"obs":(np.ravel(self.observation))})
+        out=OrderedDict({"action_mask":np.array(self.get_legal_actions()).astype(np.int32),"obs":(np.ravel(self.observation))})
 
         #return OrderedDict({"action_mask":self.get_legal_actions(self.observation),"obs":(np.ravel(self.observation))})
         return out
@@ -375,12 +376,10 @@ class jss_lite(gym.Env):
         fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
         return df_render, fig
 
-    def get_legal_actions(self,obs):
+    def get_legal_actions(self):
         action_mask=np.full((2*self.n_jobs,),0,dtype=np.int32)
-        avail_machines=[]
-        for i in range(self.n_machines):
-            if math.isnan(self.current_machines_status[i][0]):
-                avail_machines.append(i)
+        # get current available machines
+        avail_machines=[i for i in range(self.n_machines) if math.isnan(self.current_machines_status[i][0]) ]
         for i in range(self.n_jobs):
             if self.count_finished_tasks_job_matrix[i]!=self.n_tasks:
                 if self.job_machine_matrix[i][self.count_finished_tasks_job_matrix[i]] in avail_machines and i not in self.current_machines_status[:,0] and i not in self.blocked_actions: 
@@ -403,7 +402,7 @@ class jss_lite(gym.Env):
         return action_mask
 
     
-    def get_legal_actions_old(self,obs):
+    def get_legal_actions_old(self):
         action_mask=np.full((2*self.n_jobs,),0,dtype=np.int32)
         avail_machines=[]
         for i in range(self.n_machines):
@@ -450,7 +449,7 @@ class jss_lite(gym.Env):
     def observation_to_state(self):
         # here comes the transformation to returned observation 
         #todo: complete function
-        status= {"obs":((np.ravel(self.observation)).astype(np.float32)),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
+        status= {"obs":((np.ravel(self.observation)).astype(np.float32)),"action_mask":np.array(self.get_legal_actions()).astype(np.int32)}
         # obs=[]
         # for row in self.production_list:
         #     for entry in row:
@@ -483,7 +482,7 @@ class jss_lite(gym.Env):
         # observation space contains for every machine:
             #   - time which this machine has to be running in total // normalized by all jobs: beginning-> 1, finish ->0
             #   -   max(2*self.n_jobs,self.n_machines)*6  
-        self.observation[:,0]=self.get_legal_actions(self.observation)
+        self.observation[:,0]=self.get_legal_actions()
         # decide here if you want to update whole observation or just the one influenced by action
         if action ==None:
             first_iter=range(self.n_jobs)

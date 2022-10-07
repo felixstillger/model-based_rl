@@ -32,7 +32,7 @@ class jssp_light_obs_wrapper(gym.ObservationWrapper):
     def set_state(self, state):
         self.env = deepcopy(state)
         obs = np.ravel(self.env.observation)
-        mask = self.env.get_legal_actions("g")
+        mask = self.env.get_legal_actions()
         return {"obs":obs,"action_mask":mask}
    
 
@@ -63,7 +63,7 @@ class jssp_light_obs_wrapper(gym.ObservationWrapper):
     def set_state(self, state):
         self.env = deepcopy(state)
         obs = np.ravel(self.env.observation)
-        mask = self.env.get_legal_actions("g")
+        mask = self.env.get_legal_actions()
         return {"obs":obs,"action_mask":mask}
 
 
