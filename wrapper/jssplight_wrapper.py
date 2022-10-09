@@ -44,12 +44,12 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.instances_list=instances_list
         #super().__init__(env)
         instance=random.choice(self.instances_list)
-        print(f"{instance} is choosen as instance")
+        #print(f"{instance} is choosen as instance")
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
         self.max_jobs=50
-        self.max_machines=50
+        self.max_machines=20
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
@@ -70,14 +70,17 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         #         'action_mask':self.env.observation_space['action_mask']+np.zeros(self.action_mask_padding_size),
         #     }
         # )
-    def observation(self, obs):
+    #def observation(self, obs):
         #print(obs)
-        return {"obs": obs['obs']+np.zeros(self.observation_padding_size), "action_mask": obs['action_mask']+np.zeros(self.action_mask_padding_size)}
+    #    return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
+    def step(self,action):
+        obs, reward, done, info = self.env.step(action)
+        return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}, reward, done, info
 
     def reset(self):
 
         instance=random.choice(self.instances_list)
-        print(f"{instance} is choosen as instance")
+        #print(f"{instance} is choosen as instance")
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
@@ -100,19 +103,20 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
 
     def get_state(self):
-        return deepcopy(self.env),self.observation_padding_size,self.action_mask_padding_size
+        #return deepcopy(self.env),self.observation_padding_size,self.action_mask_padding_size
+        return [deepcopy(self.env),self.observation_padding_size,self.action_mask_padding_size]
 
     
     def render(self,x_bar="Machine",y_bar="Job",start_count=0):
         self.env.render(x_bar=x_bar,y_bar=y_bar,start_count=start_count)
 
-    def set_state(self, state,obs_padding,action_mask_padding):
-        self.observation_padding_size=obs_padding
-        self.action_mask_padding_size=action_mask_padding
-        self.env = deepcopy(state)
-        obs = np.ravel(self.env.observation)+np.zeros(self.observation_padding_size)
-        mask = self.env.get_legal_actions()+np.zeros(self.action_mask_padding_size)
-        return {"obs":obs,"action_mask":mask}
+    def set_state(self, state):
+        self.observation_padding_size=state[1]
+        self.action_mask_padding_size=state[2]
+        self.env = deepcopy(state[0])
+        obs = np.ravel(self.env.observation)
+        mask = self.env.get_legal_actions()
+        return {"obs": np.asarray([*obs,*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*mask,*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
 
 class Jssp_light_wrapper(gym.Env):
     """
