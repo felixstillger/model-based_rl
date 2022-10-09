@@ -48,7 +48,17 @@ class jss_lite(gym.Env):
             # 
             #df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
             df=pd.read_csv('/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
-            self.optimal_value=(df['Optimal value'][self.instance])
+            if self.instance in df.index:
+                if not math.isnan((df['Optimal value'][self.instance])):
+                    self.optimal_value=(df['Optimal value'][self.instance])
+                elif not math.isnan((df['Upper bound'][self.instance])):
+                    self.optimal_value=(df['Upper bound'][self.instance])
+                else:
+                    # optimal value goes to 0 and reward function only gets negative values
+                    self.optimal_value=0
+            else:
+                print("Key error in metadata; key does not exists")
+                self.optimal_value=0
             # here begins instance parser
         if any(x in instance_path for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
             n_line = 0
