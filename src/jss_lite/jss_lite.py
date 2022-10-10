@@ -46,8 +46,8 @@ class jss_lite(gym.Env):
         else:
             self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
             # 
-            #df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
-            df=pd.read_csv('/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
+            df=pd.read_csv('resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
+            #df=pd.read_csv('/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')
             if self.instance in df.index:
                 if not math.isnan((df['Optimal value'][self.instance])):
                     self.optimal_value=(df['Optimal value'][self.instance])

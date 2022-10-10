@@ -81,7 +81,7 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
 
         instance=random.choice(self.instances_list)
         #print(f"{instance} is choosen as instance")
-        self.env=jss_lite(instance_path=instance)
+        self.env=jss_lite(instance_path=instance, reward_mode='optimality gap')
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
         self.max_jobs=50

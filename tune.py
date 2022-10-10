@@ -25,8 +25,13 @@ import numpy as np
 # def env_creator(config):
 #     env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
 #     return env
+import os
+#print((os.path.dirname(__file__)))
+curr_dir=(os.path.dirname(__file__))
 
-instance_list=['resources/jsp_instances/standard/la01.txt','resources/jsp_instances/standard/la02.txt','resources/jsp_instances/standard/la03.txt','resources/jsp_instances/standard/la04.txt','resources/jsp_instances/standard/la05.txt']
+instance_list=['/resources/jsp_instances/standard/la01.txt','/resources/jsp_instances/standard/la02.txt','/resources/jsp_instances/standard/la03.txt','/resources/jsp_instances/standard/la04.txt','/resources/jsp_instances/standard/la05.txt']
+instance_list=[curr_dir + s for s in instance_list]
+
 checkpoint_path='/training_checkpoints/checkpoints_tune'
 
 from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
