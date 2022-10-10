@@ -208,7 +208,7 @@ class jss_lite(gym.Env):
             elif section =='on_step':
                 return 0
             elif section =='on_done':
-                return 100*(self.current_timestep-self.optimal_value)/self.optimal_value
+                return 100-(100*(self.current_timestep-self.optimal_value)/self.optimal_value)
             else:
                 raise ValueError(f"section: {section} ist not implemented yet")
         elif self.reward_mode=='utilisation':
