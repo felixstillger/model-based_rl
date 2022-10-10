@@ -12,7 +12,7 @@ import time
 from copy import deepcopy
 class jss_lite(gym.Env):
 
-    def __init__(self, instance_path=None,reward_mode='makespan'):
+    def __init__(self, instance_path=None,reward_mode='optimality gap'):
         #allocate parameters:
         self.n_jobs=None
         self.n_machines=None
@@ -196,6 +196,17 @@ class jss_lite(gym.Env):
                 return 0
             elif section =='on_done':
                 return 2*self.optimal_value-self.current_timestep
+            else:
+                raise ValueError(f"section: {section} ist not implemented yet")
+        elif  self.reward_mode=='optimality gap':
+            if section=='invalid_action':
+                return 0
+            elif section=='next_timestep':
+                return 0
+            elif section =='on_step':
+                return 0
+            elif section =='on_done':
+                return 100*(self.current_timestep-self.optimal_value)/self.optimal_value
             else:
                 raise ValueError(f"section: {section} ist not implemented yet")
         elif self.reward_mode=='utilisation':
