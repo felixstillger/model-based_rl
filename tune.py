@@ -13,16 +13,27 @@ from src.jss_lite.jss_lite import jss_lite
 ModelCatalog.register_custom_model("dense_model", DenseModel)
 from copy import deepcopy
 import numpy as np
-# def env_creator(env_config):
-#     env = jss_lite(instance_path='resources/jsp_instances/standard/ft06.txt')
+
+
+# here goes the easy observation wrapper
+
+# from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
+# instance_path='/resources/jsp_instances/standard/ft06.txt'
+
+# checkpoint_path='/training_checkpoints/checkpoints_tune'
+
+# def env_creator(config):
+#     env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
 #     return env
 
-from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
-instance_path='/resources/jsp_instances/standard/ft06.txt'
+instance_list=['resources/jsp_instances/standard/la01.txt','resources/jsp_instances/standard/la02.txt','resources/jsp_instances/standard/la03.txt','resources/jsp_instances/standard/la04.txt','resources/jsp_instances/standard/la05.txt']
 checkpoint_path='/training_checkpoints/checkpoints_tune'
 
+from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
+
 def env_creator(config):
-    env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
+    #env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
+    env=jssp_light_obs_wrapper_multi_instances(instances_list=instance_list)
     return env
 
 ModelCatalog.register_custom_model("dense_model", DenseModel)    
