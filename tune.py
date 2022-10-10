@@ -44,11 +44,12 @@ tune.register_env('custom_jssp',env_creator)
 tune.run(
     "contrib/AlphaZero",
     stop={"training_iteration": 500},
-    local_dir="/training_checkpoints/checkpoints_tune",
+    local_dir="training_checkpoints/checkpoints_tune",
     max_failures=0,
     checkpoint_freq = 1,
     config={
         "env": 'custom_jssp',
+        "disable_env_checking":True,
         "num_workers": 6,
         "rollout_fragment_length": 50,
         "train_batch_size": 50,
