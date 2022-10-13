@@ -68,8 +68,8 @@ tune.run(
             "temperature": 1.0,
             "dirichlet_epsilon": 0.20,
             "dirichlet_noise": 0.03,
-            "argmax_tree_policy": False,
-            "add_dirichlet_noise": True,
+            "argmax_tree_policy": True,
+            "add_dirichlet_noise": False,
         },
         "ranked_rewards": {
             "enable": True,
