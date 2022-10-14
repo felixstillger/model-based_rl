@@ -26,3 +26,8 @@ src/JSSEnv/__init__.py
 src/JSSEnv/.DS_Store
 src/JSSEnv/__pycache__/__init__.cpython-37.pyc
 src/JSSEnv/envs/__init__.py
+oldnotebooks/.DS_Store
+src/jss_graph_env/__pycache__/disjunctive_graph_jss_env.cpython-310.pyc
+src/jss_lite/__pycache__/jss_lite.cpython-310.pyc
+wrapper/__pycache__/jssplight_wrapper.cpython-310.pyc
+src/jss_graph_env/__pycache__/disjunctive_graph_jss_env.cpython-310.pyc
