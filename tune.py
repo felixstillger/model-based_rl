@@ -17,18 +17,8 @@ from copy import deepcopy
 import numpy as np
 
 
-# here goes the easy observation wrapper
 
-from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
-
-
-# checkpoint_path='/training_checkpoints/checkpoints_tune'
-
-# def env_creator(config):
-#     env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
-#     return env
 import os
-#print((os.path.dirname(__file__)))
 curr_dir=(os.path.dirname(__file__))
 
 instance_list=['/resources/jsp_instances/standard/la01.txt','/resources/jsp_instances/standard/la02.txt','/resources/jsp_instances/standard/la03.txt','/resources/jsp_instances/standard/la04.txt','/resources/jsp_instances/standard/la05.txt']
@@ -36,6 +26,7 @@ instance_list=[curr_dir + s for s in instance_list]
 instance_path=curr_dir+'/resources/jsp_instances/standard/ft06.txt'
 checkpoint_path='/training_checkpoints/checkpoints_tune'
 
+from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
 from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
 
 def env_creator(config):
@@ -56,7 +47,7 @@ tune.run(
     config={
         "env": 'custom_jssp',
         "disable_env_checking":True,
-        "num_workers": 6,
+        "num_workers": 4,
         "rollout_fragment_length": 50,
         "train_batch_size": 500,
         "sgd_minibatch_size": 32,
@@ -69,7 +60,7 @@ tune.run(
             "temperature": 1.0,
             "dirichlet_epsilon": 0.20,
             "dirichlet_noise": 0.03,
-            "argmax_tree_policy": True,
+            "argmax_tree_policy": False,
             "add_dirichlet_noise": False,
         },
         "ranked_rewards": {
