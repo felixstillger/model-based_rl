@@ -105,11 +105,29 @@ class DenseModel(ActorCriticModel):
         self.shared_layers = nn.Sequential(
             nn.Linear(
                 in_features=obs_space.original_space["obs"].shape[0], out_features=256
-            ),nn.ReLU(),
+            ),
             nn.Linear(in_features=256, out_features=256),
         )
         self.actor_layers = nn.Sequential(
             nn.Linear(in_features=256, out_features=action_space.n)
         )
         self.critic_layers = nn.Sequential(nn.Linear(in_features=256, out_features=1))
+        self._value_out = None
+
+class DenseModel_activation_relu(ActorCriticModel):
+    def __init__(self, obs_space, action_space, num_outputs, model_config, name):
+        ActorCriticModel.__init__(
+            self, obs_space, action_space, num_outputs, model_config, name
+        )
+
+        self.shared_layers = nn.Sequential(
+            nn.Linear(
+                in_features=obs_space.original_space["obs"].shape[0], out_features=256
+            ),nn.LeakyReLU(),
+            nn.Linear(in_features=256, out_features=256),nn.LeakyReLU(),
+        )
+        self.actor_layers = nn.Sequential(
+            nn.Linear(in_features=256, out_features=action_space.n),nn.LeakyReLU()
+        )
+        self.critic_layers = nn.Sequential(nn.Linear(in_features=256, out_features=1),nn.LeakyReLU())
         self._value_out = None

@@ -5,7 +5,8 @@ from ray.rllib.policy.policy_map import PolicyMap
 from ray.rllib.evaluation.episode import MultiAgentEpisode
 from ray.tune.registry import register_env
 #from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
-from src.jss_lite.custom_torch_models import DenseModel
+from src.jss_lite.custom_torch_models import DenseModel_activation_relu as DenseModel
+#from src.jss_lite.custom_torch_models import ConvNetModel
 from ray.rllib.models.catalog import ModelCatalog
 import gym
 #from ray.rllib.contrib.alpha_zero.core.alpha_zero_trainer import AlphaZeroTrainer
@@ -42,7 +43,6 @@ def env_creator(config):
     env=jssp_light_obs_wrapper_multi_instances(instances_list=instance_list)
     return env
 
-ModelCatalog.register_custom_model("dense_model", DenseModel)    
 
 # use tune to register the custom environment for the ppo trainer
 tune.register_env('custom_jssp',env_creator)
@@ -58,7 +58,7 @@ tune.run(
         "disable_env_checking":True,
         "num_workers": 6,
         "rollout_fragment_length": 50,
-        "train_batch_size": 50,
+        "train_batch_size": 500,
         "sgd_minibatch_size": 32,
         "lr": 1e-4,
         "horizon": 1000,
