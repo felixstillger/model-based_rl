@@ -18,8 +18,8 @@ import numpy as np
 
 # here goes the easy observation wrapper
 
-# from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
-# instance_path='/resources/jsp_instances/standard/ft06.txt'
+from wrapper.jssplight_wrapper import jssp_light_obs_wrapper
+
 
 # checkpoint_path='/training_checkpoints/checkpoints_tune'
 
@@ -32,14 +32,14 @@ curr_dir=(os.path.dirname(__file__))
 
 instance_list=['/resources/jsp_instances/standard/la01.txt','/resources/jsp_instances/standard/la02.txt','/resources/jsp_instances/standard/la03.txt','/resources/jsp_instances/standard/la04.txt','/resources/jsp_instances/standard/la05.txt']
 instance_list=[curr_dir + s for s in instance_list]
-
+instance_path=curr_dir+'/resources/jsp_instances/standard/ft06.txt'
 checkpoint_path='/training_checkpoints/checkpoints_tune'
 
 from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
 
 def env_creator(config):
-    #env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
-    env=jssp_light_obs_wrapper_multi_instances(instances_list=instance_list)
+    env = jssp_light_obs_wrapper(jss_lite(instance_path=instance_path))
+    #env=jssp_light_obs_wrapper_multi_instances(instances_list=instance_list)
     return env
 
 ModelCatalog.register_custom_model("dense_model", DenseModel)    
