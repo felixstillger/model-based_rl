@@ -53,8 +53,8 @@ def eval_env(agent,env):
     episode_length=0
     start_time=time.time()
     while not done:
-        action, _, _ = policy.compute_single_action(obs, episode=episode)
-        obs, reward, done, _ = env.step(action)
+        action, _, _ = policy.compute_single_action(state, episode=episode)
+        state, reward, done, _ = env.step(action)
         episode_length += 1
     return time.time()-start_time, episode_length, reward
 
