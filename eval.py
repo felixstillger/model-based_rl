@@ -55,6 +55,7 @@ def eval_env(agent,env):
     while not done:
         action, _, _ = policy.compute_single_action(state, episode=episode)
         state, reward, done, _ = env.step(action)
+        episode.length+=1
         episode_length += 1
     return time.time()-start_time, episode_length, reward
 
@@ -69,14 +70,14 @@ config = {
     "train_batch_size"  : 500,
     "sgd_minibatch_size": 64,
     "lr"                : 0.0001,
-    #"explore"           :False,
+    "explore"           :False,
     #"horizon"           : 600,
     #"soft_horizon"      : True,
     "num_sgd_iter"      : 1,
     #"horizon"           : 100,
     "mcts_config"       : {
         "puct_coefficient"   : 1.5,
-        "num_simulations"    : 2000,
+        "num_simulations"    : 100,
         "temperature"        : 1.5,
         "dirichlet_epsilon"  : 0.20,
         "dirichlet_noise"    : 0.03,
@@ -97,8 +98,8 @@ config = {
 agent = AlphaZeroTrainer( config=config, env='custom_jssp')
 #if restore_agent:
 #restore_path='training_checkpoints/checkpoints_az_jsslite/checkpoint-5'
-#training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_f8da7_00000_0_2022-10-07_11-11-05'
-training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
+training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/published_checkpoints/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
+#training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
 nr_checkpoints=0
 for f in os.listdir(training_folder):
     if 'checkpoint' in f:
@@ -113,8 +114,8 @@ for f in os.listdir(training_folder):
             # here comes the evaluation:
             for instance in instance_list:
                 eval_sheet[str(f[-6:]),instance]=eval_env(agent,jssp_light_obs_wrapper_multi_instances(instances_list=[instance]))
-        run+=1
-        print(f"run: {run} of {nr_checkpoints} evaluated")
+            run+=1
+            print(f"run: {run} of {nr_checkpoints} evaluated")
 
 # generate csv    
 df=pd.DataFrame.from_dict(eval_sheet)
