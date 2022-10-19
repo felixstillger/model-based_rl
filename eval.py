@@ -116,6 +116,8 @@ for f in os.listdir(training_folder):
                 eval_sheet[str(f[-6:]),instance]=eval_env(agent,jssp_light_obs_wrapper_multi_instances(instances_list=[instance]))
             run+=1
             print(f"run: {run} of {nr_checkpoints} evaluated")
+            df=pd.DataFrame.from_dict(eval_sheet)
+            df.to_csv('eval.csv')
 
 # generate csv    
 df=pd.DataFrame.from_dict(eval_sheet)
