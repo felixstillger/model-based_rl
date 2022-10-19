@@ -98,8 +98,8 @@ config = {
 agent = AlphaZeroTrainer( config=config, env='custom_jssp')
 #if restore_agent:
 #restore_path='training_checkpoints/checkpoints_az_jsslite/checkpoint-5'
-training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/published_checkpoints/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
-#training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
+#training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/published_checkpoints/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
+training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
 nr_checkpoints=0
 for f in os.listdir(training_folder):
     if 'checkpoint' in f:
@@ -114,10 +114,11 @@ for f in os.listdir(training_folder):
             # here comes the evaluation:
             for instance in instance_list:
                 eval_sheet[str(f[-6:]),instance]=eval_env(agent,jssp_light_obs_wrapper_multi_instances(instances_list=[instance]))
+                df=pd.DataFrame.from_dict(eval_sheet)
+                df.to_csv('eval.csv')
             run+=1
             print(f"run: {run} of {nr_checkpoints} evaluated")
-            df=pd.DataFrame.from_dict(eval_sheet)
-            df.to_csv('eval.csv')
+          
 
 # generate csv    
 df=pd.DataFrame.from_dict(eval_sheet)
