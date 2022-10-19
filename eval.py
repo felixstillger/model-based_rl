@@ -40,6 +40,7 @@ def env_creator_single(instance):
 
 def eval_env(agent,env):
     state=env.reset()
+    policy = agent.get_policy(DEFAULT_POLICY_ID)
     episode = MultiAgentEpisode(
         PolicyMap(0,0),
         lambda _, __: DEFAULT_POLICY_ID,
