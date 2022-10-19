@@ -96,7 +96,8 @@ config = {
 agent = AlphaZeroTrainer( config=config, env='custom_jssp')
 #if restore_agent:
 #restore_path='training_checkpoints/checkpoints_az_jsslite/checkpoint-5'
-training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_f8da7_00000_0_2022-10-07_11-11-05'
+#training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_f8da7_00000_0_2022-10-07_11-11-05'
+training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_1c529_00000_0_2022-10-17_16-58-08'
 nr_checkpoints=0
 for f in os.listdir(training_folder):
     if 'checkpoint' in f:
