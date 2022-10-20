@@ -5,8 +5,8 @@ from ray.rllib.policy.sample_batch import DEFAULT_POLICY_ID
 from ray.rllib.policy.policy_map import PolicyMap
 from ray.rllib.evaluation.episode import MultiAgentEpisode
 from ray.tune.registry import register_env
-#from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
-from src.jss_lite.custom_torch_models import DenseModel_activation_relu as DenseModel
+from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
+#from src.jss_lite.custom_torch_models import DenseModel_activation_relu as DenseModel
 #from src.jss_lite.custom_torch_models import ConvNetModel
 from ray.rllib.models.catalog import ModelCatalog
 import gym
@@ -99,7 +99,10 @@ agent = AlphaZeroTrainer( config=config, env='custom_jssp')
 #if restore_agent:
 #restore_path='training_checkpoints/checkpoints_az_jsslite/checkpoint-5'
 #training_folder='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/published_checkpoints/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
-training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
+#training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_50160_00000_0_2022-10-17_18-46-57'
+#training_folder='/home/fs608798/Schreibtisch/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_190a1_00000_0_2022-10-14_14-31-16'
+#training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_96474_00000_0_2022-10-13_10-39-45/'
+training_folder='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/checkpoints_tune/contrib/AlphaZero/contrib_AlphaZero_custom_jssp_5734a_00000_0_2022-10-11_06-36-59/'
 nr_checkpoints=0
 for f in os.listdir(training_folder):
     if 'checkpoint' in f:
