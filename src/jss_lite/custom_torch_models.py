@@ -122,12 +122,13 @@ class DenseModel_activation_relu(ActorCriticModel):
 
         self.shared_layers = nn.Sequential(
             nn.Linear(
-                in_features=obs_space.original_space["obs"].shape[0], out_features=256
+                in_features=obs_space.original_space["obs"].shape[0], out_features=obs_space.original_space["obs"].shape[0]
             ),nn.LeakyReLU(),
-            nn.Linear(in_features=256, out_features=256),nn.LeakyReLU(),
+            nn.Linear(in_features=obs_space.original_space["obs"].shape[0], out_features=256),nn.LeakyReLU(),
+            nn.Linear(in_features=256, out_features=256),
         )
         self.actor_layers = nn.Sequential(
-            nn.Linear(in_features=256, out_features=action_space.n),nn.LeakyReLU()
+            nn.Linear(in_features=256, out_features=action_space.n)
         )
         self.critic_layers = nn.Sequential(nn.Linear(in_features=256, out_features=1),nn.LeakyReLU())
         self._value_out = None
