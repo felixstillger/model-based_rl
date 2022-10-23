@@ -48,8 +48,8 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
-        self.max_jobs=50
-        self.max_machines=20
+        self.max_jobs=10
+        self.max_machines=5
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
@@ -74,8 +74,11 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         #print(obs)
     #    return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
     def step(self,action):
+        # check if dummy action is used and rescale it to no padding:
+        if action>=self.env.n_jobs:
+            action=int(action-int(self.action_mask_padding_size/2))
         obs, reward, done, info = self.env.step(action)
-        return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}, reward, done, info
+        return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(obs['action_mask'])}, reward, done, info
 
     def reset(self):
 
@@ -84,8 +87,8 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.env=jss_lite(instance_path=instance, reward_mode='optimality gap')
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
-        self.max_jobs=50
-        self.max_machines=50
+        self.max_jobs=10
+        self.max_machines=5
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
@@ -100,11 +103,20 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         #     }
         # )
         obs=self.env.reset()
-        return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
+        #return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
+        return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(obs['action_mask'])}
 
     def get_state(self):
         #return deepcopy(self.env),self.observation_padding_size,self.action_mask_padding_size
         return [deepcopy(self.env),self.observation_padding_size,self.action_mask_padding_size]
+    
+    def transform_action_mask(self,action_mask):
+        # this definition is to split the action mask from real and dummy actions.
+        #afterwards dummy actions are arranged at half mask size:
+        #real_actions=action_mask[:self.env.n_jobs]
+        #dummy_actions=action_mask[self.env.n_jobs:]
+        #print(self.action_mask_padding_size)/2
+        return np.asarray([*action_mask[:int(self.env.n_jobs)],*np.zeros(int(self.action_mask_padding_size/2),dtype=np.int32),*action_mask[int(self.env.n_jobs):],*np.zeros(int(self.action_mask_padding_size/2),dtype=np.int32)])
 
     
     def render(self,x_bar="Machine",y_bar="Job",start_count=0):
@@ -116,7 +128,7 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.env = deepcopy(state[0])
         obs = np.ravel(self.env.observation)
         mask = self.env.get_legal_actions()
-        return {"obs": np.asarray([*obs,*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*mask,*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
+        return {"obs": np.asarray([*obs,*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(mask)}
 
 class Jssp_light_wrapper(gym.Env):
     """
@@ -152,6 +164,7 @@ class Jssp_light_wrapper(gym.Env):
         #     done,
         #     info,
         # )
+
         return self.env.step(action)
 
     def observation(self,obs):
