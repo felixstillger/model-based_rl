@@ -35,6 +35,38 @@ class jssp_light_obs_wrapper(gym.ObservationWrapper):
         mask = self.env.get_legal_actions()
         return {"obs":obs,"action_mask":mask}
    
+class jssp_light_obs_wrapper_no_action_mask(gym.ObservationWrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        # shape multi:
+        #shape_multi=(max(2*self.env.max_jobs,self.env.max_machines)*6)
+        shape_single=(max(2*self.env.n_jobs,self.env.n_machines)*6)
+        #self.observation_space = gym.spaces.Box(0, 1, (self.n,))
+        self.action_space = self.env.action_space
+        self.observation_space =gym.spaces.Box(low=0.0,high=1.0,
+                    shape=(shape_single,),dtype=np.float64)
+    
+        
+    def observation(self, obs):
+        #print(obs)
+        return obs['obs']
+        #return {"obs": new_obs, "action_mask": np.array([1] * self.action_space.n, dtype=np.float32)}
+        #return new_obs
+    def get_state(self):
+        return deepcopy(self.env)
+
+    
+    def render(self,x_bar="Machine",y_bar="Job",start_count=0):
+        self.env.render(x_bar=x_bar,y_bar=y_bar,start_count=start_count)
+
+    def set_state(self, state):
+        self.env = deepcopy(state)
+        obs = np.ravel(self.env.observation)
+        mask = self.env.get_legal_actions()
+        return obs
+    # additional unique:
+    def get_legal_actions(self):
+        return self.env.get_legal_actions()
 
 
 
@@ -48,8 +80,8 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
-        self.max_jobs=10
-        self.max_machines=5
+        self.max_jobs=50
+        self.max_machines=25
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
@@ -74,9 +106,30 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         #print(obs)
     #    return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": np.asarray([*obs['action_mask'],*np.zeros(self.action_mask_padding_size,dtype=np.int32)])}
     def step(self,action):
+        # check if action is out of bounds:
+        trigger=False
+        # if action==50:
+        #     trigger=True
+        # if trigger:
+        #     print("1")
+        # n_jobs=10
+        # dummy_jobs=40
+
+        if action >= self.env.n_jobs and action < self.env.n_jobs+self.dummy_jobs or action >= 2*self.env.n_jobs+self.dummy_jobs:
+            # do nothing to the environment and get the old state:
+            obs=self.env.observation_to_state()
+            reward=0
+            done=False
+            info = {
+            'action': action
+        }
+            #raise ValueError("this is if a not legal action is done")
+            return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(obs['action_mask'])}, reward, done, info
         # check if dummy action is used and rescale it to no padding:
         if action>=self.env.n_jobs:
-            action=int(action-int(self.action_mask_padding_size/2))
+            if trigger:
+                print("3")
+            action=int(action-int(self.dummy_jobs))
         obs, reward, done, info = self.env.step(action)
         return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(obs['action_mask'])}, reward, done, info
 
@@ -87,8 +140,8 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.env=jss_lite(instance_path=instance, reward_mode='optimality gap')
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
-        self.max_jobs=10
-        self.max_machines=5
+        self.max_jobs=50
+        self.max_machines=25
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
@@ -129,6 +182,12 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         obs = np.ravel(self.env.observation)
         mask = self.env.get_legal_actions()
         return {"obs": np.asarray([*obs,*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(mask)}
+
+        # additional unique for ppo:
+    def get_legal_actions(self):
+        
+        mask= self.env.get_legal_actions()
+        return self.transform_action_mask(mask)
 
 class Jssp_light_wrapper(gym.Env):
     """
