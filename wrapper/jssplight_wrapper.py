@@ -39,12 +39,13 @@ class jssp_light_obs_wrapper_no_action_mask(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
         # shape multi:
+        
         #shape_multi=(max(2*self.env.max_jobs,self.env.max_machines)*6)
-        shape_single=(max(2*self.env.n_jobs,self.env.n_machines)*6)
+        #shape_single=(max(2*self.env.n_jobs,self.env.n_machines)*6)
         #self.observation_space = gym.spaces.Box(0, 1, (self.n,))
         self.action_space = self.env.action_space
         self.observation_space =gym.spaces.Box(low=0.0,high=1.0,
-                    shape=(shape_single,),dtype=np.float64)
+                    shape=(self.env.observation_space['obs'].shape),dtype=np.float64)
     
         
     def observation(self, obs):

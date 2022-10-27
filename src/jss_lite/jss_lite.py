@@ -171,7 +171,7 @@ class jss_lite(gym.Env):
         # by now sections are: "invalid_action", "next_timestep", "on_step", "on_done"
         if self.reward_mode=='makespan':
             if section=='invalid_action':
-                return 0
+                return -0.0001
             elif section=='next_timestep':
                 return 0
             elif section =='on_step':
