@@ -35,15 +35,25 @@ instance_list=['/resources/jsp_instances/standard/la01.txt']
 instance_list_training=['/resources/jsp_instances/standard/la01.txt','/resources/jsp_instances/standard/la02.txt','/resources/jsp_instances/standard/la03.txt']
 instance_list_validation=[]
 
+huge_inst_train=["la01","la02","la03","la16","la17","la18","la06","la07","la08","la09","la21","la22","la23","la24","la25","la36","la37","ta01","ta02","ta03","ta04","ta05","ta06","ta07","abz7","abz9","la26","la27","la28"]
+huge_inst_test=["la04","la05","la19","la20","la10","la38","la39","la40","ta08","ta09","ta10","la29","la30"]
+
 # add current directory to path
 instance_list_training=[curr_dir + s for s in instance_list_training]
 instance_list=[curr_dir + s for s in instance_list]
 instance_list_2=[curr_dir + s for s in instance_list_2]
 
+# here goes the huge sets:
+huge_inst_train=[curr_dir+ "/resources/jsp_instances/standard/" + s +".txt" for s in huge_inst_train]
+huge_inst_test=[curr_dir+ "/resources/jsp_instances/standard/" + s +".txt" for s in huge_inst_test]
+instance_list_training=huge_inst_train
+instance_list_validation=huge_inst_test
+
+
 # check if to create directories:
 for check_instance in instance_list_training:
     instance_str=check_instance[-8:-4]
-    s_path=(curr_dir+"/training_checkpoints/la_multi/"+instance_str)
+    s_path=(curr_dir+"/training_checkpoints/la_multi_huge/"+instance_str)
     if not os.path.exists(s_path):
         os.mkdir(s_path)
 
@@ -90,7 +100,7 @@ tune.register_env('custom_jssp',env_creator)
 
 # init checkpoint for untrained trainer:
 agent = AlphaZeroTrainer( config=config, env='custom_jssp')
-s_path=curr_dir+'/training_checkpoints/la_multi/untrained'
+s_path=curr_dir+'/training_checkpoints/la_multi_huge/untrained'
 if not os.path.exists(s_path):
     os.mkdir(s_path)
 
@@ -108,7 +118,7 @@ for episode in range(num_episodes):
         t=time.time()
         agent.train()
         print(f"training iteration {episode} finished after {time.time()-t} seconds")
-        s_path=(curr_dir+"/training_checkpoints/la_multi/"+instance_str+"/"+str(episode))
+        s_path=(curr_dir+"/training_checkpoints/la_multi_huge/"+instance_str+"/"+str(episode))
         if not os.path.exists(s_path):
             os.mkdir(s_path)
         prev_checkpoint=agent.save_checkpoint(s_path)
