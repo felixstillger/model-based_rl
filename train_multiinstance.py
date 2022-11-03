@@ -5,8 +5,8 @@ from ray.rllib.policy.sample_batch import DEFAULT_POLICY_ID
 from ray.rllib.policy.policy_map import PolicyMap
 from ray.rllib.evaluation.episode import MultiAgentEpisode
 from ray.tune.registry import register_env
-from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
-#from src.jss_lite.custom_torch_models import DenseModel
+#from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
+from src.jss_lite.custom_torch_models import DenseModel_activation_relu as DenseModel
 from ray.rllib.models.catalog import ModelCatalog
 import gym
 from src.jss_lite.jss_lite import jss_lite
