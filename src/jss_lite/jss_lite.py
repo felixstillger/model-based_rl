@@ -182,6 +182,8 @@ class jss_lite(gym.Env):
                 raise ValueError(f"section: {section} ist not implemented yet")
         elif  self.reward_mode=='optimality gap':
             if section=='invalid_action':
+                print('Error invalid action')
+                
                 return 0
             elif section=='next_timestep':
                 return 0
@@ -233,8 +235,11 @@ class jss_lite(gym.Env):
             r_action=action-self.n_jobs
             # append action to the blocked actions
             self.blocked_actions.append(r_action)
-            # add here timesteps to     
-            self.timesteps_list.append(self.current_timestep+self.job_tasklength_matrix[r_action,self.count_finished_tasks_job_matrix[r_action]])         
+            # add here timesteps to
+            if not self.timesteps_list:
+                # should never happen: todo: check if could arise:     
+                self.timesteps_list.append(self.current_timestep+self.job_tasklength_matrix[r_action,self.count_finished_tasks_job_matrix[r_action]])
+            #          
         # update observation:
         #self.observation[:,0]=self.get_legal_actions(self.observation)
         self.observation[:,0]=self.get_legal_actions()

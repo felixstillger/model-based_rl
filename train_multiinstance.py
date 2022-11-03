@@ -43,6 +43,7 @@ def main():
 
     huge_inst_train=["la01","la02","la03","la16","la17","la18","la06","la07","la08","la09","la21","la22","la23","la24","la25","la36","la37","ta01","ta02","ta03","ta04","ta05","ta06","ta07","abz7","abz9","la26","la27","la28"]
     huge_inst_test=["la04","la05","la19","la20","la10","la38","la39","la40","ta08","ta09","ta10","la29","la30"]
+    huge_inst_train=["la01","la02","la03","la16","la17","la18","la21","la22","la23","la24","la25","la36","la37","ta01","ta02","ta03","ta04","ta05","ta06","ta07","abz7","abz9","la26","la27","la28"]
 
     # add current directory to path
     instance_list_training=[curr_dir + s for s in instance_list_training]
@@ -188,49 +189,48 @@ def main():
         eval_result={}
         agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
         for _ in range(num_episodes):
-            for checkpoints in instance_list_training:
-                #eval_path=curr_dir+'/training_checkpoints/la_multi'+"/"+instance_list_training[-1][-8:-4]+"/"+str(_)
-                eval_path=curr_dir+'/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge'+"/"+checkpoints[-8:-4]+"/"+str(_)
-                if not os.path.exists(eval_path):
-                    #results=pd.DataFrame.from_dict(eval_result,orient='index')
-                    #results.to_csv('results.csv')
-                    #print(f"{eval_path} does not exits: break")
-                    return True
-                else:
-                    agent.load_checkpoint(eval_path+"/checkpoint-1")
-                    # here goes the training instances:
-                    for instance in instance_list_training:
-                        print(f"begin: {instance}")
-                        eval_env= jssp_light_obs_wrapper_multi_instances([instance])
-                        e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
-                        eval_tmp={}
-                        eval_tmp["time"]=e_t
-                        eval_tmp["reward"]=e_reward
-                        eval_tmp["length"]=e_length
-                        eval_tmp["instance"]=instance[-8:-4]
-                        eval_tmp['episode']=_
-                        eval_tmp['checkpoint']=checkpoints[-8:-4]+"/"+str(_)
-                        eval_result[str(_),checkpoints[-8:-4],instance[-8:-4]]=eval_tmp
-                        results=pd.DataFrame.from_dict(eval_result,orient='index')
-                        results.to_csv('results.csv')
-                        print(f"{instance} in time: {e_t}")
-                    # here goes the validation:
-                    for instance in instance_list_validation:
-                        eval_env= jssp_light_obs_wrapper_multi_instances([instance])
-                        e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
-                        eval_tmp={}
-                        eval_tmp["time"]=e_t
-                        eval_tmp["reward"]=e_reward
-                        eval_tmp["length"]=e_length
-                        eval_tmp["instance"]=instance[-8:-4]
-                        eval_tmp['episode']=_
-                        eval_tmp['checkpoint']=checkpoints[-8:-4]+"/"+str(_)
-                        eval_result[str(_),checkpoints[-8:-4],instance[-8:-4]]=eval_tmp
-                        results=pd.DataFrame.from_dict(eval_result,orient='index')
-                        results.to_csv('results.csv')
-                        print(f"{instance} in time: {e_t}")
-
-
+            #for checkpoints in instance_list_training:
+            checkpoints='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge/ta07.txt'
+            #eval_path=curr_dir+'/training_checkpoints/la_multi'+"/"+instance_list_training[-1][-8:-4]+"/"+str(_)
+            eval_path=curr_dir+'/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge'+"/"+checkpoints[-8:-4]+"/"+str(_)
+            if not os.path.exists(eval_path):
+                #results=pd.DataFrame.from_dict(eval_result,orient='index')
+                #results.to_csv('results.csv')
+                #print(f"{eval_path} does not exits: break")
+                return True
+            else:
+                agent.load_checkpoint(eval_path+"/checkpoint-1")
+                # here goes the training instances:
+                for instance in instance_list_training:
+                    print(f"begin: {instance}")
+                    eval_env= jssp_light_obs_wrapper_multi_instances([instance])
+                    e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
+                    eval_tmp={}
+                    eval_tmp["time"]=e_t
+                    eval_tmp["reward"]=e_reward
+                    eval_tmp["length"]=e_length
+                    eval_tmp["instance"]=instance[-8:-4]
+                    eval_tmp['episode']=_
+                    eval_tmp['checkpoint']=checkpoints[-8:-4]+"/"+str(_)
+                    eval_result[str(_),checkpoints[-8:-4],instance[-8:-4]]=eval_tmp
+                    results=pd.DataFrame.from_dict(eval_result,orient='index')
+                    results.to_csv('results.csv')
+                    print(f"{instance} in time: {e_t}")
+                # here goes the validation:
+                for instance in instance_list_validation:
+                    eval_env= jssp_light_obs_wrapper_multi_instances([instance])
+                    e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
+                    eval_tmp={}
+                    eval_tmp["time"]=e_t
+                    eval_tmp["reward"]=e_reward
+                    eval_tmp["length"]=e_length
+                    eval_tmp["instance"]=instance[-8:-4]
+                    eval_tmp['episode']=_
+                    eval_tmp['checkpoint']=checkpoints[-8:-4]+"/"+str(_)
+                    eval_result[str(_),checkpoints[-8:-4],instance[-8:-4]]=eval_tmp
+                    results=pd.DataFrame.from_dict(eval_result,orient='index')
+                    results.to_csv('results.csv')
+                    print(f"{instance} in time: {e_t}")
 
     
 if __name__ == '__main__':
