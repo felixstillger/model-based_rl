@@ -10,6 +10,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from collections import OrderedDict
 import time
+import json
+
 from copy import deepcopy
 class jss_lite(gym.Env):
 
@@ -43,6 +45,10 @@ class jss_lite(gym.Env):
         if instance_path is None:
             raise ValueError("no instance is given")
         else:
+            pass
+        self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
+        if any(x in self.instance for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
+
             self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
             # 
             curr_dir=(os.path.join(os.path.dirname(__file__),'..','..'))
@@ -60,7 +66,6 @@ class jss_lite(gym.Env):
                 print("Key error in metadata; key does not exists")
                 self.optimal_value=0
             # here begins instance parser
-        if any(x in instance_path for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
             n_line = 0
             with open(instance_path, 'r') as text:
                 for line_txt in text.readlines():
@@ -86,8 +91,31 @@ class jss_lite(gym.Env):
                             j+=1    
                         self.job_length_vector[nr_job-1]= cum_jobtime
                 #todo: implement more conventions, e.g. IMA or Taillard
+        elif any(x in self.instance for x in ['_inst']):
+            #here goes the custom ima instance parser
+            with open(instance_path) as f:
+                instance_dict = json.load(f)
+            #self.instance=instance_path
+            self.optimal_value=instance_dict['optimal_time']
+            self.n_jobs=instance_dict['n_jobs']
+            self.n_machines=instance_dict['n_resources']
+            # colides with later assignment:
+            self.n_tasks=instance_dict['n_ops_per_job']
+
+            # matrix contains machine and coresponding job lenth
+            self.job_machine_matrix = np.zeros((self.n_jobs,self.n_machines), dtype=(np.int32))
+            self.job_tasklength_matrix=np.zeros((self.n_jobs,self.n_machines), dtype=(np.int32))
+            # contains time to complete jobs; unused 
+            self.job_length_vector = np.zeros(self.n_jobs, dtype=np.int32)
+
+            for job in range(self.n_jobs):
+                self.job_machine_matrix[job,:]= instance_dict['jssp_instance']['machines'][job]
+            for machine in range(self.n_machines):
+                self.job_tasklength_matrix[machine,:]= instance_dict['jssp_instance']['durations'][machine]
+
         else:
             raise NotImplementedError("till now only standard instances are implemented")
+
         #todo define observation space:
         # states are order of jobs to machines
         self.observation_space_shape=(max(2*self.n_jobs,self.n_machines),6)
