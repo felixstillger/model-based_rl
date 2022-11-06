@@ -128,7 +128,7 @@ class DenseModel_activation_relu(ActorCriticModel):
             nn.Linear(in_features=256, out_features=256),
         )
         self.actor_layers = nn.Sequential(
-            nn.Linear(in_features=256, out_features=action_space.n)
+            nn.Linear(in_features=256, out_features=action_space.n),nn.LeakyReLU()
         )
         self.critic_layers = nn.Sequential(nn.Linear(in_features=256, out_features=1),nn.LeakyReLU())
         self._value_out = None

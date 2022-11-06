@@ -26,6 +26,7 @@ import shlex
 def main():
     def reload_ray_parameters(list):
         ray.shutdown()
+        ray.init(num_cpus=4, num_gpus=0)
         ModelCatalog.register_custom_model("dense_model", DenseModel)    
         def env_creator_variable_instance(config,env_name):
             return jssp_light_obs_wrapper_multi_instances([env_name])
@@ -34,6 +35,8 @@ def main():
             #print(f"{'myEnv'+instance_tune[-8:-4]} environment registered")
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
+    saving_directory='"/training_checkpoints/la_multi_huge'
+
     #curr_dir='/Users/felix/sciebo/masterarbeit/progra/model-based_rl'
     instance_list_2=['/resources/jsp_instances/standard/la01.txt','/resources/jsp_instances/standard/la02.txt','/resources/jsp_instances/standard/la03.txt']
     instance_list=['/resources/jsp_instances/standard/la01.txt']
@@ -61,7 +64,7 @@ def main():
     # check if to create directories:
     for check_instance in instance_list_training:
         instance_str=check_instance[-8:-4]
-        s_path=(curr_dir+"/training_checkpoints/la_multi_huge/"+instance_str)
+        s_path=(curr_dir+saving_directory+"/"+instance_str)
         if not os.path.exists(s_path):
             os.mkdir(s_path)
 
@@ -141,7 +144,7 @@ def main():
     if train_agent:
         # init checkpoint for untrained trainer:
         agent = AlphaZeroTrainer( config=config, env='custom_jssp')
-        s_path=curr_dir+'/training_checkpoints/la_multi_huge/untrained'
+        s_path=curr_dir+saving_directory+'/untrained'
         if not os.path.exists(s_path):
             os.mkdir(s_path)
 
@@ -159,7 +162,7 @@ def main():
                 t=time.time()
                 agent.train()
                 print(f"training iteration {episode} finished after {time.time()-t} seconds")
-                s_path=(curr_dir+"/training_checkpoints/la_multi_huge/"+instance_str+"/"+str(episode))
+                s_path=(curr_dir+saving_directory+"/"+instance_str+"/"+str(episode))
                 if not os.path.exists(s_path):
                     os.mkdir(s_path)
                 prev_checkpoint=agent.save_checkpoint(s_path)
@@ -192,7 +195,7 @@ def main():
             for checkpoints in instance_list_training:
             #checkpoints='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge/ta07.txt'
             #eval_path=curr_dir+'/training_checkpoints/la_multi'+"/"+instance_list_training[-1][-8:-4]+"/"+str(_)
-                eval_path=curr_dir+'/training_checkpoints/la_multi_huge'+"/"+checkpoints[-8:-4]+"/"+str(_)
+                eval_path=curr_dir+saving_directory+"/"+checkpoints[-8:-4]+"/"+str(_)
                 if not os.path.exists(eval_path):
                     #results=pd.DataFrame.from_dict(eval_result,orient='index')
                     #results.to_csv('results.csv')
