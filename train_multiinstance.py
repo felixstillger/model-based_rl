@@ -38,7 +38,8 @@ def main():
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
 
-    saving_directory='/training_checkpoints/ima_3_3'
+    instances_names='ima_3_3'
+    saving_directory='/training_checkpoints/'+instances_names
 
     #check savin directory
 
@@ -252,7 +253,7 @@ def main():
                         eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
                         eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
                         results=pd.DataFrame.from_dict(eval_result,orient='index')
-                        results.to_csv('results.csv')
+                        results.to_csv('results'+instances_names+'csv')
                         print(f"{instance} in time: {e_t}")
 
     
