@@ -49,7 +49,7 @@ class jss_lite(gym.Env):
         self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
         if any(x in self.instance for x in ["abz","dmu","yn","ta","swv","orb","la","ft"]):
 
-            self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
+            #self.instance=instance_path.replace('/', ' ').split(' ')[-1].split('.')[-2]
             # 
             curr_dir=(os.path.join(os.path.dirname(__file__),'..','..'))
             df=pd.read_csv(curr_dir+'/resources/jps_instances_metadata/instances_metadata.csv',index_col='Unnamed: 0')

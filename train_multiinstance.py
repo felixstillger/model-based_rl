@@ -22,6 +22,8 @@ import sys
 import shlex
 
 #/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/cluster_data/training_checkpoints/la_multi
+def get_instance_name(string):
+    return string.replace('/', ' ').split(' ')[-1].split('.')[-2]
 
 def main():
     def reload_ray_parameters(list):
@@ -31,11 +33,14 @@ def main():
         def env_creator_variable_instance(config,env_name):
             return jssp_light_obs_wrapper_multi_instances([env_name])
         for instance_tune in list:
-            tune.register_env('myEnv'+instance_tune[-8:-4], lambda config:env_creator_variable_instance(config=config,env_name=instance_tune))
+            tune.register_env('myEnv'+get_instance_name(instance_tune), lambda config:env_creator_variable_instance(config=config,env_name=instance_tune))
             #print(f"{'myEnv'+instance_tune[-8:-4]} environment registered")
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
-    saving_directory='"/training_checkpoints/la_multi_huge'
+
+    saving_directory='/training_checkpoints/ima_3_3'
+
+    #check savin directory
 
     #curr_dir='/Users/felix/sciebo/masterarbeit/progra/model-based_rl'
     instance_list_2=['/resources/jsp_instances/standard/la01.txt','/resources/jsp_instances/standard/la02.txt','/resources/jsp_instances/standard/la03.txt']
@@ -47,6 +52,13 @@ def main():
     huge_inst_train=["la01","la02","la03","la16","la17","la18","la06","la07","la08","la09","la21","la22","la23","la24","la25","la36","la37","ta01","ta02","ta03","ta04","ta05","ta06","ta07","abz7","abz9","la26","la27","la28"]
     huge_inst_test=["la04","la05","la19","la20","la10","la38","la39","la40","ta08","ta09","ta10","la29","la30"]
     #huge_inst_train=["la01","la02","la03","la16","la17","la18","la21","la22","la23","la24","la25","la36","la37","ta01","ta02","ta03","ta04","ta05","ta06","ta07","abz7","abz9","la26","la27","la28"]
+    
+    ima_inst_train=[]
+    ima_inst_test=[]
+    for i in range(0,20):
+        ima_inst_train.append(curr_dir+'/resources/jsp_instances/ima/3x3x3/3x3_'+str(i)+'_inst.json')
+    for i in range(21,30):
+        ima_inst_test.append(curr_dir+'/resources/jsp_instances/ima/3x3x3/3x3_'+str(i)+'_inst.json')
 
     # add current directory to path
     instance_list_training=[curr_dir + s for s in instance_list_training]
@@ -57,13 +69,21 @@ def main():
     huge_inst_train=[curr_dir+ "/resources/jsp_instances/standard/" + s +".txt" for s in huge_inst_train]
     huge_inst_test=[curr_dir+ "/resources/jsp_instances/standard/" + s +".txt" for s in huge_inst_test]
 
-    instance_list_training=huge_inst_train
-    instance_list_validation=huge_inst_test
+    # here goes the ima sets
+
+    # select which instances to train and validate:
+    instance_list_training=ima_inst_train
+    instance_list_validation=ima_inst_test
 
 
     # check if to create directories:
+    s_path=(curr_dir+saving_directory)
+    if not os.path.exists(s_path):
+        os.mkdir(s_path)
+
+
     for check_instance in instance_list_training:
-        instance_str=check_instance[-8:-4]
+        instance_str=get_instance_name(check_instance)
         s_path=(curr_dir+saving_directory+"/"+instance_str)
         if not os.path.exists(s_path):
             os.mkdir(s_path)
@@ -156,7 +176,7 @@ def main():
             for train_instance in instance_list_training:
                 reload_ray_parameters(instance_list_training)
                 # store string which instance is currently active
-                instance_str=train_instance[-8:-4]
+                instance_str=get_instance_name(train_instance)
                 agent = AlphaZeroTrainer( config=config, env='myEnv'+instance_str)
                 agent.load_checkpoint(prev_checkpoint)
                 t=time.time()
@@ -195,7 +215,7 @@ def main():
             for checkpoints in instance_list_training:
             #checkpoints='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge/ta07.txt'
             #eval_path=curr_dir+'/training_checkpoints/la_multi'+"/"+instance_list_training[-1][-8:-4]+"/"+str(_)
-                eval_path=curr_dir+saving_directory+"/"+checkpoints[-8:-4]+"/"+str(_)
+                eval_path=curr_dir+saving_directory+"/"+get_instance_name(checkpoints)+"/"+str(_)
                 if not os.path.exists(eval_path):
                     #results=pd.DataFrame.from_dict(eval_result,orient='index')
                     #results.to_csv('results.csv')
@@ -212,10 +232,10 @@ def main():
                         eval_tmp["time"]=e_t
                         eval_tmp["reward"]=e_reward
                         eval_tmp["length"]=e_length
-                        eval_tmp["instance"]=instance[-8:-4]
+                        eval_tmp["instance"]=get_instance_name(instance)
                         eval_tmp['episode']=_
-                        eval_tmp['checkpoint']=checkpoints[-8:-4]+"/"+str(_)
-                        eval_result[str(_),checkpoints[-8:-4],instance[-8:-4]]=eval_tmp
+                        eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
+                        eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
                         results=pd.DataFrame.from_dict(eval_result,orient='index')
                         results.to_csv('results.csv')
                         print(f"{instance} in time: {e_t}")
@@ -227,10 +247,10 @@ def main():
                         eval_tmp["time"]=e_t
                         eval_tmp["reward"]=e_reward
                         eval_tmp["length"]=e_length
-                        eval_tmp["instance"]=instance[-8:-4]
+                        eval_tmp["instance"]=get_instance_name(instance)
                         eval_tmp['episode']=_
-                        eval_tmp['checkpoint']=checkpoints[-8:-4]+"/"+str(_)
-                        eval_result[str(_),checkpoints[-8:-4],instance[-8:-4]]=eval_tmp
+                        eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
+                        eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
                         results=pd.DataFrame.from_dict(eval_result,orient='index')
                         results.to_csv('results.csv')
                         print(f"{instance} in time: {e_t}")
