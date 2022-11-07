@@ -5,8 +5,8 @@ from ray.rllib.policy.sample_batch import DEFAULT_POLICY_ID
 from ray.rllib.policy.policy_map import PolicyMap
 from ray.rllib.evaluation.episode import MultiAgentEpisode
 from ray.tune.registry import register_env
-#from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
-from src.jss_lite.custom_torch_models import DenseModel_activation_relu as DenseModel
+from ray.rllib.contrib.alpha_zero.models.custom_torch_models import DenseModel
+#from src.jss_lite.custom_torch_models import DenseModel_activation_relu as DenseModel
 from ray.rllib.models.catalog import ModelCatalog
 import gym
 from src.jss_lite.jss_lite import jss_lite
@@ -38,7 +38,7 @@ def main():
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
 
-    instances_names='ima_3_3'
+    instances_names='ima_3_3_no_act'
     saving_directory='/training_checkpoints/'+instances_names
 
     #check savin directory
@@ -56,10 +56,11 @@ def main():
     
     ima_inst_train=[]
     ima_inst_test=[]
+    num=str(3)
     for i in range(0,20):
-        ima_inst_train.append(curr_dir+'/resources/jsp_instances/ima/3x3x3/3x3_'+str(i)+'_inst.json')
+        ima_inst_train.append(curr_dir+'/resources/jsp_instances/ima/'+num+'x'+num+'x'+num+'/'+num+'x'+num+'_'+str(i)+'_inst.json')
     for i in range(21,30):
-        ima_inst_test.append(curr_dir+'/resources/jsp_instances/ima/3x3x3/3x3_'+str(i)+'_inst.json')
+        ima_inst_test.append(curr_dir+'/resources/jsp_instances/ima/'+num+'x'+num+'x'+num+'/'+num+'x'+num+'_'+str(i)+'_inst.json')
 
     # add current directory to path
     instance_list_training=[curr_dir + s for s in instance_list_training]
@@ -253,7 +254,7 @@ def main():
                         eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
                         eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
                         results=pd.DataFrame.from_dict(eval_result,orient='index')
-                        results.to_csv('results'+instances_names+'csv')
+                        results.to_csv('results'+instances_names+'.csv')
                         print(f"{instance} in time: {e_t}")
 
     
