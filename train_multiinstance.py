@@ -28,7 +28,7 @@ def get_instance_name(string):
 def main():
     def reload_ray_parameters(list):
         ray.shutdown()
-        ray.init(num_cpus=4, num_gpus=0)
+        ray.init()
         ModelCatalog.register_custom_model("dense_model", DenseModel)    
         def env_creator_variable_instance(config,env_name):
             return jssp_light_obs_wrapper_multi_instances([env_name])
@@ -130,7 +130,7 @@ def main():
     config_eval = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 6,
+        "num_workers"       : 4,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
