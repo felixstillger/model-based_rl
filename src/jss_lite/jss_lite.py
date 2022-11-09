@@ -210,8 +210,8 @@ class jss_lite(gym.Env):
                 raise ValueError(f"section: {section} ist not implemented yet")
         elif  self.reward_mode=='optimality gap':
             if section=='invalid_action':
-                print('Error invalid action')
-                
+                print(f"Error invalid action on instance {self.instance}")
+                #print()
                 return 0
             elif section=='next_timestep':
                 return 0
