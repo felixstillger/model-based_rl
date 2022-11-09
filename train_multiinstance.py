@@ -15,7 +15,7 @@ from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
 import time
 from copy import deepcopy
 import numpy as np
-
+import JSSEnv
 import os
 import pandas as pd
 import sys
@@ -26,6 +26,8 @@ def get_instance_name(string):
     return string.replace('/', ' ').split(' ')[-1].split('.')[-2]
 
 def main():
+    def env_creator_variable_instance(config,env_name):
+        return jssp_light_obs_wrapper_multi_instances([env_name])
     def reload_ray_parameters(list):
         ray.shutdown()
         ray.init()
@@ -35,10 +37,19 @@ def main():
         for instance_tune in list:
             tune.register_env('myEnv'+get_instance_name(instance_tune), lambda config:env_creator_variable_instance(config=config,env_name=instance_tune))
             #print(f"{'myEnv'+instance_tune[-8:-4]} environment registered")
+
+    def reload_ray_validation(list):
+        ray.shutdown()
+        ray.init()
+        ModelCatalog.register_custom_model("dense_model", DenseModel)    
+        def env_creator_variable_instance(config,env_name):
+            return jssp_light_obs_wrapper_multi_instances([env_name])
+        for instance_tune in list:
+            tune.register_env('custom_jssp', lambda config:env_creator_variable_instance(config=config,env_name=instance_tune))
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
 
-    instances_names='ima_3_3_no_act'
+    instances_names='ima_6_6_no_act'
     saving_directory='/training_checkpoints/'+instances_names
 
     #check savin directory
@@ -56,7 +67,7 @@ def main():
     
     ima_inst_train=[]
     ima_inst_test=[]
-    num=str(3)
+    num=str(6)
     for i in range(0,20):
         ima_inst_train.append(curr_dir+'/resources/jsp_instances/ima/'+num+'x'+num+'x'+num+'/'+num+'x'+num+'_'+str(i)+'_inst.json')
     for i in range(21,30):
@@ -91,14 +102,15 @@ def main():
             os.mkdir(s_path)
 
 
-    train_agent=True
+    train_agent=False
     eval_agent=True
     restore_agent= False
     num_episodes = 15
+    inner_episodes=5
     config = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 4,
+        "num_workers"       : 6,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
@@ -182,12 +194,13 @@ def main():
                 agent = AlphaZeroTrainer( config=config, env='myEnv'+instance_str)
                 agent.load_checkpoint(prev_checkpoint)
                 t=time.time()
-                agent.train()
-                print(f"training iteration {episode} finished after {time.time()-t} seconds")
-                s_path=(curr_dir+saving_directory+"/"+instance_str+"/"+str(episode))
-                if not os.path.exists(s_path):
-                    os.mkdir(s_path)
-                prev_checkpoint=agent.save_checkpoint(s_path)
+                for _ in inner_episodes:
+                    agent.train()
+                    print(f"training iteration {episode} finished after {time.time()-t} seconds")
+                    s_path=(curr_dir+saving_directory+"/"+instance_str+"/"+str(episode))
+                    if not os.path.exists(s_path):
+                        os.mkdir(s_path)
+                    prev_checkpoint=agent.save_checkpoint(s_path)
             print(f"{episode} of {num_episodes} finished")
 
     def eval_agent_on_instance(_agent,_env):
@@ -207,55 +220,61 @@ def main():
             action, _, _ = policy.compute_single_action(obs, episode=episode)
             obs, reward, done, _ = _env.step(action)
             episode.length += 1
+
         return time.time()-t,reward,episode.length
 
 
     if eval_agent:
         eval_result={}
-        agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
+        #agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
         for _ in range(num_episodes):
-            for checkpoints in instance_list_training:
-            #checkpoints='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge/ta07.txt'
-            #eval_path=curr_dir+'/training_checkpoints/la_multi'+"/"+instance_list_training[-1][-8:-4]+"/"+str(_)
-                eval_path=curr_dir+saving_directory+"/"+get_instance_name(checkpoints)+"/"+str(_)
-                if not os.path.exists(eval_path):
-                    #results=pd.DataFrame.from_dict(eval_result,orient='index')
-                    #results.to_csv('results.csv')
-                    #print(f"{eval_path} does not exits: break")
-                    return True
-                else:
-                    agent.load_checkpoint(eval_path+"/checkpoint-1")
-                    # here goes the training instances:
-                    for instance in instance_list_training:
-                        print(f"begin: {instance}")
-                        eval_env= jssp_light_obs_wrapper_multi_instances([instance])
-                        e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
+
+            # here goes the training instances:
+            for instance in instance_list_training + instance_list_validation:
+                reload_ray_validation([instance])
+                agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
+                for checkpoints in instance_list_training:
+                    #checkpoints='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/cluster_data/training_checkpoints/la_multi_huge/ta07.txt'
+                    #eval_path=curr_dir+'/training_checkpoints/la_multi'+"/"+instance_list_training[-1][-8:-4]+"/"+str(_)
+                    eval_path=curr_dir+saving_directory+"/"+get_instance_name(checkpoints)+"/"+str(_)
+                    if not os.path.exists(eval_path):
+                        #results=pd.DataFrame.from_dict(eval_result,orient='index')
+                        #results.to_csv('results.csv')
+                        #print(f"{eval_path} does not exits: break")
+                        return True
+                    else:
+                        agent.load_checkpoint(eval_path+"/checkpoint-1")
+                        print(f"loaded: {eval_path}")
+                        #eval_env= jssp_light_obs_wrapper_multi_instances([instance])
+                        e_t=time.time()
+                        eval_env=env_creator_variable_instance(config="config",env_name=instance)
                         eval_tmp={}
-                        eval_tmp["time"]=e_t
-                        eval_tmp["reward"]=e_reward
-                        eval_tmp["length"]=e_length
+                        eval_tmp["time"],eval_tmp["reward"],eval_tmp["length"] = eval_agent_on_instance(agent,eval_env)
                         eval_tmp["instance"]=get_instance_name(instance)
                         eval_tmp['episode']=_
                         eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
                         eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
                         results=pd.DataFrame.from_dict(eval_result,orient='index')
                         results.to_csv('results.csv')
-                        print(f"{instance} in time: {e_t}")
+                        print(f"{instance} in time: {time.time()-e_t}")
                     # here goes the validation:
-                    for instance in instance_list_validation:
-                        eval_env= jssp_light_obs_wrapper_multi_instances([instance])
-                        e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
-                        eval_tmp={}
-                        eval_tmp["time"]=e_t
-                        eval_tmp["reward"]=e_reward
-                        eval_tmp["length"]=e_length
-                        eval_tmp["instance"]=get_instance_name(instance)
-                        eval_tmp['episode']=_
-                        eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
-                        eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
-                        results=pd.DataFrame.from_dict(eval_result,orient='index')
-                        results.to_csv('results'+instances_names+'.csv')
-                        print(f"{instance} in time: {e_t}")
+                    # for instance in instance_list_validation:
+                    #     reload_ray_validation([instance])
+                    #     agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
+                    #     agent.load_checkpoint(eval_path+"/checkpoint-1")
+                    #     eval_env= jssp_light_obs_wrapper_multi_instances([instance])
+                    #     e_t,e_reward,e_length = eval_agent_on_instance(agent,eval_env)
+                    #     eval_tmp={}
+                    #     eval_tmp["time"]=e_t
+                    #     eval_tmp["reward"]=e_reward
+                    #     eval_tmp["length"]=e_length
+                    #     eval_tmp["instance"]=get_instance_name(instance)
+                    #     eval_tmp['episode']=_
+                    #     eval_tmp['checkpoint']=get_instance_name(checkpoints)+"/"+str(_)
+                    #     eval_result[str(_),get_instance_name(checkpoints),get_instance_name(instance)]=eval_tmp
+                    #     results=pd.DataFrame.from_dict(eval_result,orient='index')
+                    #     results.to_csv('results'+instances_names+'.csv')
+                    #     print(f"{instance} in time: {e_t}")
 
     
 if __name__ == '__main__':
