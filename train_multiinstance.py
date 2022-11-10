@@ -192,7 +192,7 @@ def main():
                 agent = AlphaZeroTrainer( config=config, env='myEnv'+instance_str)
                 agent.load_checkpoint(prev_checkpoint)
                 t=time.time()
-                for _ in inner_episodes:
+                for _ in range(inner_episodes):
                     agent.train()
                     print(f"training iteration {episode} finished after {time.time()-t} seconds")
                     s_path=(curr_dir+saving_directory+"/"+instance_str+"/"+str(episode))
