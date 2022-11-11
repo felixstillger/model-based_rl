@@ -81,8 +81,8 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
         #just a parameter do define the max size of expected jobs
-        self.max_jobs=50
-        self.max_machines=25
+        self.max_jobs=10
+        self.max_machines=10
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation

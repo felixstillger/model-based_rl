@@ -108,7 +108,7 @@ def main():
     config = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 6,
+        "num_workers"       : 1,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
@@ -140,7 +140,7 @@ def main():
     config_eval = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 4,
+        "num_workers"       : 1,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
