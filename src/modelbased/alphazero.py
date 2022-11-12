@@ -560,6 +560,7 @@ COMMON_CONFIG: TrainerConfigDict = {
 }
 
 
+# here goes alpha zero
 DEFAULT_CONFIG = with_common_config({
     # Size of batches collected from each worker
     "rollout_fragment_length": 200,
