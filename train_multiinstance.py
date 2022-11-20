@@ -49,7 +49,7 @@ def main():
     curr_dir=(os.path.dirname(__file__))
 
     num_inst=str(6)
-    instances_names='ima_'+num_inst+'_'+num_inst+'_no_act'
+    instances_names='ima_'+num_inst+'_'+num_inst+'_no_act_10inner'
     saving_directory='/training_checkpoints/'+instances_names
     ima_inst_train=[]
     ima_inst_test=[]
@@ -103,12 +103,12 @@ def main():
     train_agent=True
     eval_agent=True
     restore_agent= False
-    num_episodes = 4
-    inner_episodes=1
+    num_episodes = 10
+    inner_episodes=10
     config = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 1,
+        "num_workers"       : 7,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
@@ -140,7 +140,7 @@ def main():
     config_eval = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 1,
+        "num_workers"       : 7,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
@@ -191,8 +191,9 @@ def main():
                 instance_str=get_instance_name(train_instance)
                 agent = AlphaZeroTrainer( config=config, env='myEnv'+instance_str)
                 agent.load_checkpoint(prev_checkpoint)
-                t=time.time()
+                
                 for _ in range(inner_episodes):
+                    t=time.time()
                     agent.train()
                     print(f"training iteration {episode} finished after {time.time()-t} seconds")
                     s_path=(curr_dir+saving_directory+"/"+instance_str+"/"+str(episode))
