@@ -77,10 +77,21 @@ class jssp_light_obs_wrapper_no_action_mask(gym.ObservationWrapper):
 
 
 class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
-    def __init__(self, instances_list):
+    def __init__(self, instances_list,env_config=None):
+        if env_config !=None:
+            print(env_config)
+            if 'worker'in env_config:
+                if 'setup' not in env_config:
+                    env_config['setup']=='Yes'
+                print(env_config)
+                print(f"worker index: {env_config.worker_index}")
+        
         self.instances_list=instances_list
+
         #super().__init__(env)
+        
         instance=random.choice(self.instances_list)
+        print(instance)
         #print(f"{instance} is choosen as instance")
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
