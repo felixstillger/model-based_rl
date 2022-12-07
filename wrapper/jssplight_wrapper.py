@@ -90,14 +90,14 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
-        self.observation_padding_size=(max(2*self.max_jobs,self.max_machines)*6)-(max(2*self.env.n_jobs,self.env.n_machines)*6)
+        self.observation_padding_size=(max(self.max_jobs,self.max_machines)*7)-(max(self.env.n_jobs,self.env.n_machines)*7)
         self.action_mask_padding_size=2*self.dummy_jobs
         # gym declerations:
         self.action_space = gym.spaces.Discrete(2*self.max_jobs)
         self.observation_space = gym.spaces.Dict({
                 "action_mask": gym.spaces.Box(0,1,shape=(self.action_space.n,),dtype=np.int32),
                 "obs": gym.spaces.Box(low=0.0,high=1.0,
-                    shape=((max(2*self.max_jobs,self.max_machines)*6),),dtype=np.float64)
+                    shape=((max(self.max_jobs,self.max_machines)*7),),dtype=np.float64)
                      
                                                 }
                                                 )    
@@ -150,7 +150,7 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
         self.dummy_jobs=self.max_jobs-self.env.n_jobs
         self.dummy_machines=self.max_machines-self.env.n_machines
         # differnce gives us the count of zeros to pad to the observation
-        self.observation_padding_size=(max(2*self.max_jobs,self.max_machines)*6)-(max(2*self.env.n_jobs,self.env.n_machines)*6)
+        self.observation_padding_size=(max(self.max_jobs,self.max_machines)*7)-(max(self.env.n_jobs,self.env.n_machines)*7)
         self.action_mask_padding_size=2*self.dummy_jobs
         # gym declerations:
         # self.action_space = gym.spaces.Discrete(2*self.max_jobs)    
@@ -196,6 +196,7 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
 
 class Jssp_light_wrapper(gym.Env):
     """
+    out of use
     Wrapper for the custom jssp Problem.
 
     clipboard:
