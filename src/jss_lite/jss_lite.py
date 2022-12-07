@@ -341,7 +341,7 @@ class jss_lite(gym.Env):
 
         #return OrderedDict({"action_mask":self.get_legal_actions(self.observation),"obs":(np.ravel(self.observation))})
         return out
-    def render(self,x_bar="Machine",y_bar="Job",start_count=0):
+    def render(self,x_bar="Machine",y_bar="Job",start_count=0,keep_grey=False):
         # is not time critical function. so O(n^2) is no problem; todo:make more pretty
         def production_to_dict(input,i,j):
             return(dict(Job=f"job_{str(input[0]+start_count).zfill(max_len)}", Start=dt + timedelta(seconds=int(input[2]+start_count)),Finish=dt + timedelta(seconds=int(input[3])),Machine=f"machine_{str(i+start_count).zfill(max_len)}"))
@@ -360,7 +360,15 @@ class jss_lite(gym.Env):
         else:
             df_render.sort_values(by=y_bar,inplace=True)
             #fig = px.timeline(df_render, x_start="Start", x_end="Finish", y="Task", color="Resource")
-            fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
+            #colour in grey:
+            if keep_grey:
+                rgb_add=math.floor( 255/int(self.n_machines))
+                color_map={}
+                for i in range(self.n_machines):
+                    color_map['machine_'+str(i)]=f"rgb({i*rgb_add},{i*rgb_add},{i*rgb_add})"
+                fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar,color_discrete_map=color_map)
+            else:
+                fig = px.timeline(df_render, x_start="Start", x_end="Finish", color=x_bar, y=y_bar)
 
             #todo, save or do smth else to console rendering
             fig.show()
