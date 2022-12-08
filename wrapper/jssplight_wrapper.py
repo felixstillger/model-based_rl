@@ -6,8 +6,8 @@ from gym.spaces import Discrete, Dict, Box
 from src.jss_lite.jss_lite import jss_lite
 
 # configs:
-_max_jobs=10
-_max_machines=10
+_max_jobs=15
+_max_machines=15
 
 class jssp_light_obs_wrapper(gym.ObservationWrapper):
     def __init__(self, env):
