@@ -59,14 +59,14 @@ config_eval = {
     "train_batch_size"  : 500,
     "sgd_minibatch_size": 64,
     "lr"                : 0.0001,
-    "explore"           :False,
+    #"explore"           :False,
     #"horizon"           : 600,
     #"soft_horizon"      : True,
     "num_sgd_iter"      : 1,
     #"horizon"           : 100,
     "mcts_config"       : {
         "puct_coefficient"   : 1.5,
-        "num_simulations"    : 100,
+        "num_simulations"    : 200,
         "temperature"        : 1,
         "dirichlet_epsilon"  : 0.20,
         "dirichlet_noise"    : 0.03,
@@ -89,6 +89,6 @@ if not os.path.exists(s_path):
 
 #s_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/alpha_zero_random_instances'
 agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
-for _ in range(200):
+for _ in range(2000):
     agent.train()
     agent.save_checkpoint(s_path)
