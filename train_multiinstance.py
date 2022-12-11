@@ -48,7 +48,7 @@ def main():
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
 
-    num_inst=str(6)
+    num_inst=str(15)
     instances_names='ima_'+num_inst+'_'+num_inst+'_no_act_10inner'
     saving_directory='/training_checkpoints/'+instances_names
     ima_inst_train=[]
@@ -101,14 +101,14 @@ def main():
 
 
     train_agent=True
-    eval_agent=True
+    eval_agent=False
     restore_agent= False
     num_episodes = 10
     inner_episodes=10
     config = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 7,
+        "num_workers"       : 2,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,

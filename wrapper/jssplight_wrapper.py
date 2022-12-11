@@ -4,7 +4,8 @@ import gym
 import numpy as np
 from gym.spaces import Discrete, Dict, Box
 from src.jss_lite.jss_lite import jss_lite
-
+import time
+import pandas as pd
 # configs:
 _max_jobs=15
 _max_machines=15
@@ -78,20 +79,30 @@ class jssp_light_obs_wrapper_no_action_mask(gym.ObservationWrapper):
 
 class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
     def __init__(self, instances_list,env_config=None):
-        if env_config !=None:
-            print(env_config)
-            if 'worker'in env_config:
-                if 'setup' not in env_config:
-                    env_config['setup']=='Yes'
-                print(env_config)
-                print(f"worker index: {env_config.worker_index}")
-        
+
+        #if env_config !=None:
+            #print(env_config)
+        #    if 'worker'in env_config:
+        #        if 'setup' not in env_config:
+         #           env_config['setup']=='Yes'
+                #print(env_config)
+                #print(f"worker index: {env_config.worker_index}")
+
         self.instances_list=instances_list
 
         #super().__init__(env)
+
+
         
         instance=random.choice(self.instances_list)
-        print(instance)
+
+        # self.env_config=env_config
+        # instance=self.instances_list[self.env_config['iterations']]
+        # self.instance_dic={}
+        # self.instance_dic[str(time.time())]=[instance]
+        # df=pd.DataFrame.from_dict(self.instance_dic)
+        # df.to_csv('loaded_instances.csv')
+
         #print(f"{instance} is choosen as instance")
         self.env=jss_lite(instance_path=instance)
         # relevant parameters for wrapping:
@@ -143,8 +154,6 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
             return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(obs['action_mask'])}, reward, done, info
         # check if dummy action is used and rescale it to no padding:
         if action>=self.env.n_jobs:
-            if trigger:
-                print("3")
             action=int(action-int(self.dummy_jobs))
         obs, reward, done, info = self.env.step(action)
         return {"obs": np.asarray([*obs['obs'],*np.zeros(self.observation_padding_size,dtype=np.float64)]), "action_mask": self.transform_action_mask(obs['action_mask'])}, reward, done, info
@@ -152,6 +161,14 @@ class jssp_light_obs_wrapper_multi_instances(gym.Wrapper):
     def reset(self):
 
         instance=random.choice(self.instances_list)
+
+        #this has been a try to solve for a dedicated environment
+        # instance=self.instances_list[self.env_config['iterations']]
+        # self.instance_dic[str(time.time())]=[instance]
+        # df=pd.DataFrame.from_dict(self.instance_dic)
+        # df.to_csv('loaded_instances.csv')
+
+
         #print(f"{instance} is choosen as instance")
         self.env=jss_lite(instance_path=instance, reward_mode='optimality gap')
         # relevant parameters for wrapping:

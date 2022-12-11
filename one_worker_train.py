@@ -28,7 +28,7 @@ ModelCatalog.register_custom_model("dense_model", DenseModel)
 curr_dir='/Users/felix/sciebo/masterarbeit/progra/model-based_rl'
 curr_dir=(os.path.dirname(__file__))
 
-num_inst=str(15)
+num_inst=str(3)
 instances_names='ima_'+num_inst+'_'+num_inst+'_no_act_10inner'
 ima_inst_train=[]
 ima_inst_test=[]
@@ -90,5 +90,6 @@ if not os.path.exists(s_path):
 #s_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/alpha_zero_random_instances'
 agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
 for _ in range(2000):
+    print(f"begin training: {_}")
     agent.train()
     agent.save_checkpoint(s_path)
