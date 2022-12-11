@@ -61,3 +61,14 @@ src/jss_graph_env/__pycache__/disjunctive_graph_jss_env.cpython-310.pyc
 src/jss_lite/__pycache__/jss_lite.cpython-310.pyc
 wrapper/__pycache__/jssp_wrapper_klagenfurt.cpython-310.pyc
 .gitignore
+exact_solver/ima_instances/.DS_Store
+exact_solver/.DS_Store
+exact_solver/ima_instances/3/.DS_Store
+exact_solver/different_instances.svg
+exact_solver/out.svg
+exact_solver/out3.svg
+exact_solver/out6.svg
+exact_solver/out8.svg
+exact_solver/out10.svg
+exact_solver/out15.svg
+exact_solver/test.svg
