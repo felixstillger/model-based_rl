@@ -61,7 +61,7 @@ config_eval = {
     #"explore"           :False,
     #"horizon"           : 600,
     #"soft_horizon"      : True,
-    "num_sgd_iter"      : 1,
+    "num_sgd_iter"      : 30,
     #"horizon"           : 100,
     "mcts_config"       : {
         "puct_coefficient"   : 1.5,
