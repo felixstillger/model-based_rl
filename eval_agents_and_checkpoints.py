@@ -24,12 +24,14 @@ curr_dir=(os.path.dirname(__file__))
 
 
 
-checkpoint_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/cluster_daten/one_environment/oneenvironment6/checkpoint-'
-loading_instance="/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/ima/15x15x15/15x15_4_inst.json"
+#loading_instance="/Users/felix/sciebo/masterarbeit/progra/model-based_rl/resources/jsp_instances/ima/15x15x15/15x15_4_inst.json"
 #train_instances=[loading_instance]
 train_instances=[]
-num_checkpoints=10
+num_checkpoints=50
 num_inst=str(6)
+
+checkpoint_path=curr_dir+'/cluster_daten/one_environment/oneenvironment'+num_inst+'/checkpoint-'
+
 for i in range(4,7):
     train_instances.append(curr_dir+'/resources/jsp_instances/ima/'+num_inst+'x'+num_inst+'x'+num_inst+'/'+num_inst+'x'+num_inst+'_'+str(i)+'_inst.json')
 
@@ -67,7 +69,7 @@ for loading_instance in train_instances:
         #"horizon"           : 100,
         "mcts_config"       : {
             "puct_coefficient"   : 1.5,
-            "num_simulations"    : 5,
+            "num_simulations"    : 100,
             "temperature"        : 1,
             "dirichlet_epsilon"  : 0.20,
             "dirichlet_noise"    : 0.03,
@@ -115,7 +117,7 @@ for loading_instance in train_instances:
         every_action_time.append(time_list)
         train_rewards.append(reward)
         every_action.append(action_list)
-    
-    results[get_instance_name(loading_instance)]={'train_reward':train_rewards,'every_action_time':every_action_time,'every_action':every_action}
-    df=pd.DataFrame.from_dict(results)
-    df.to_csv(f"eval_{num_inst}_inst_{num_checkpoints}_check.csv")   
+        # write results
+        results[get_instance_name(loading_instance)]={'train_reward':train_rewards,'every_action_time':every_action_time,'every_action':every_action}
+        df=pd.DataFrame.from_dict(results)
+        df.to_csv(f"eval_{num_inst}_inst_{num_checkpoints}_check.csv")   
