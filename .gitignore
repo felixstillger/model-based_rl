@@ -2,6 +2,7 @@
 /.vscode
 /roms
 /training_checkpoints
+/cluster_daten
 /.pyc
 src/JSSEnv/envs/.DS_Store
 src/JSSEnv/envs/__pycache__/__init__.cpython-37.pyc
@@ -125,6 +126,14 @@ tensorflow/ima10/AlphaZeroTrainer_custom_jssp_2022-12-07_16-07-0470vndzlp/progre
 tensorflow/ima10/AlphaZeroTrainer_custom_jssp_2022-12-07_16-07-0470vndzlp/result.json
 wrapper/__pycache__/jssp_wrapper_klagenfurt.cpython-310.pyc
 published_checkpoints/az_one_worker/.DS_Store
+resources/.DS_Store
+resources/jsp_instances/.DS_Store
+resources/jsp_instances/ima/.DS_Store
+src/.DS_Store
+src/.DS_Store
+src/jss_graph_env/__pycache__/disjunctive_graph_jss_env.cpython-310.pyc
+src/jss_lite/__pycache__/jss_lite.cpython-310.pyc
+wrapper/__pycache__/jssp_wrapper_klagenfurt.cpython-310.pyc
 resources/.DS_Store
 resources/jsp_instances/.DS_Store
 resources/jsp_instances/ima/.DS_Store
