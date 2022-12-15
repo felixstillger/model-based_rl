@@ -19,6 +19,8 @@ import time
 import ray
 from src.jss_lite.jss_lite import jss_lite
 from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
+restore_agent=True
+restore_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/oneenvironment3/checkpoint-4'
 
 
 ray.shutdown()
@@ -81,13 +83,23 @@ config_eval = {
     },
 }
 
-s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment'+num_inst)
-if not os.path.exists(s_path):
-    os.mkdir(s_path)
+
 
 
 #s_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/alpha_zero_random_instances'
 agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
+if restore_agent:
+    agent.load_checkpoint(restore_path)
+    print(f"loaded checkpoint {restore_path}")
+    s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment_resume'+num_inst)
+    if not os.path.exists(s_path):
+        os.mkdir(s_path)
+
+else:
+    s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment'+num_inst)
+    if not os.path.exists(s_path):
+        os.mkdir(s_path)
+
 for _ in range(2000):
     print(f"begin training: {_}")
     agent.train()
