@@ -183,9 +183,9 @@ def main():
         # init untrained checkpoint to load config to
         prev_checkpoint=agent.save_checkpoint(s_path)
 	# restore here the checkpoint
-	if restore_agent:
-		prev_checkpoint='/home/fs608798/Schreibtisch/model-based_rl/training_checkpoints/ima_8_8_1_inner_500sim/8x8_9_inst/0/checkpoint-3'
-		print("checkpoint loaded from: {prev_checkpoint}")
+    if restore_agent:
+        prev_checkpoint='/home/fs608798/Schreibtisch/model-based_rl/training_checkpoints/ima_8_8_1_inner_500sim/8x8_9_inst/0/checkpoint-3'
+        print("checkpoint loaded from: {prev_checkpoint}")
         print("start training")
         # training loop:
         for episode in range(num_episodes):
