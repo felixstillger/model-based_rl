@@ -19,8 +19,8 @@ import time
 import ray
 from src.jss_lite.jss_lite import jss_lite
 from wrapper.jssplight_wrapper import jssp_light_obs_wrapper_multi_instances
-restore_agent=True
-restore_path='/Users/felix/sciebo/masterarbeit/progra/model-based_rl/training_checkpoints/oneenvironment3/checkpoint-4'
+restore_agent=False
+restore_path='/home/fs608798/masterarbeit/model-based_rl/training_checkpoints/oneenvironment15/checkpoint-64'
 
 
 ray.shutdown()
@@ -29,8 +29,8 @@ ModelCatalog.register_custom_model("dense_model", DenseModel)
 curr_dir='/Users/felix/sciebo/masterarbeit/progra/model-based_rl'
 curr_dir=(os.path.dirname(__file__))
 
-num_inst=str(3)
-instances_names='ima_'+num_inst+'_'+num_inst+'_no_act_10inner'
+num_inst=str(6)
+instances_names='ima_'+num_inst+'_'+num_inst+'_2000_sims'
 ima_inst_train=[]
 ima_inst_test=[]
 
@@ -67,7 +67,7 @@ config_eval = {
     #"horizon"           : 100,
     "mcts_config"       : {
         "puct_coefficient"   : 1.5,
-        "num_simulations"    : 200,
+        "num_simulations"    : 2000,
         "temperature"        : 1,
         "dirichlet_epsilon"  : 0.20,
         "dirichlet_noise"    : 0.03,
@@ -91,12 +91,12 @@ agent = AlphaZeroTrainer( config=config_eval, env='custom_jssp')
 if restore_agent:
     agent.load_checkpoint(restore_path)
     print(f"loaded checkpoint {restore_path}")
-    s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment_resume'+num_inst)
+    s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment_resume'+instances_names)
     if not os.path.exists(s_path):
         os.mkdir(s_path)
 
 else:
-    s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment'+num_inst)
+    s_path=(curr_dir+'/training_checkpoints'+"/"+'oneenvironment'+instances_names)
     if not os.path.exists(s_path):
         os.mkdir(s_path)
 

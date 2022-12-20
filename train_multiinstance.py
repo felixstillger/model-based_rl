@@ -48,13 +48,13 @@ def main():
     ray.shutdown()
     curr_dir=(os.path.dirname(__file__))
 
-    num_inst=str(15)
-    instances_names='ima_'+num_inst+'_'+num_inst+'_no_act_10inner'
+    num_inst=str(8)
+    instances_names='ima_'+num_inst+'_'+num_inst+'_1_inner_500sim_resume'
     saving_directory='/training_checkpoints/'+instances_names
     ima_inst_train=[]
     ima_inst_test=[]
 
-    for i in range(0,20):
+    for i in range(10,20):
         ima_inst_train.append(curr_dir+'/resources/jsp_instances/ima/'+num_inst+'x'+num_inst+'x'+num_inst+'/'+num_inst+'x'+num_inst+'_'+str(i)+'_inst.json')
     for i in range(21,30):
         ima_inst_test.append(curr_dir+'/resources/jsp_instances/ima/'+num_inst+'x'+num_inst+'x'+num_inst+'/'+num_inst+'x'+num_inst+'_'+str(i)+'_inst.json')
@@ -102,13 +102,13 @@ def main():
 
     train_agent=True
     eval_agent=False
-    restore_agent= False
-    num_episodes = 10
-    inner_episodes=10
+    restore_agent= True
+    num_episodes = 1
+    inner_episodes=3
     config = {
         "framework": "torch",
         "disable_env_checking":True,
-        "num_workers"       : 2,
+        "num_workers"       : 0,
         "rollout_fragment_length": 50,
         "train_batch_size"  : 500,
         "sgd_minibatch_size": 64,
@@ -117,11 +117,11 @@ def main():
         "explore"           :True,
         #"horizon"           : 600,
         #"soft_horizon"      : True,
-        "num_sgd_iter"      : 30,
+        "num_sgd_iter"      : 40,
         #"horizon"           : 100,
         "mcts_config"       : {
             "puct_coefficient"   : 1.5,
-            "num_simulations"    : 100,
+            "num_simulations"    : 500,
             "temperature"        : 1.0,
             "dirichlet_epsilon"  : 0.20,
             "dirichlet_noise"    : 0.03,
@@ -182,6 +182,10 @@ def main():
 
         # init untrained checkpoint to load config to
         prev_checkpoint=agent.save_checkpoint(s_path)
+	# restore here the checkpoint
+	if restore_agent:
+		prev_checkpoint='/home/fs608798/Schreibtisch/model-based_rl/training_checkpoints/ima_8_8_1_inner_500sim/8x8_9_inst/0/checkpoint-3'
+		print("checkpoint loaded from: {prev_checkpoint}")
         print("start training")
         # training loop:
         for episode in range(num_episodes):
