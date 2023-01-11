@@ -1,7 +1,11 @@
-/.DS_Store
+.DS_Store
 /.vscode
-/.svg
-/.csv
+*.xlsx
+*.xltx
+*.pyc
+*.svg
+*.csv
+.code-workspace
 /roms
 /training_checkpoints
 /cluster_daten
@@ -243,3 +247,4 @@ plots/ima_instances/8/8x8_19_inst.json
 resources/.DS_Store
 resources/jsp_instances/.DS_Store
 resources/jsp_instances/ima/.DS_Store
+resources/.DS_Store
