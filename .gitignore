@@ -1,5 +1,7 @@
 /.DS_Store
 /.vscode
+/.svg
+/.csv
 /roms
 /training_checkpoints
 /cluster_daten
