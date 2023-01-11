@@ -40,6 +40,8 @@ class jss_lite(gym.Env):
         self.invalid_actions=0
         # possible modes: "makespan" or "utalisation"; prezized in reward method that returns reward
         self.reward_mode=reward_mode
+
+        # here comes the instance loader:
         if not exists(instance_path):
             raise FileExistsError(f"File does not exists or {instance_path} is no valid path")
         if instance_path is None:
@@ -181,7 +183,7 @@ class jss_lite(gym.Env):
         # by now sections are: "invalid_action", "next_timestep", "on_step", "on_done"
         if self.reward_mode=='makespan':
             if section=='invalid_action':
-                return -0.0001
+                return 0
             elif section=='next_timestep':
                 return 0
             elif section =='on_step':
@@ -192,9 +194,10 @@ class jss_lite(gym.Env):
                 raise ValueError(f"section: {section} ist not implemented yet")
         elif  self.reward_mode=='optimality gap':
             if section=='invalid_action':
-                print(f"Error invalid action on instance {self.instance}")
+                #print(f"Error invalid action on instance {self.instance}")
                 #print()
-                return 0
+                return -0.0000001
+                #return 0
             elif section=='next_timestep':
                 return 0
             elif section =='on_step':
@@ -544,5 +547,6 @@ class jss_lite(gym.Env):
         return self.observation_to_state()
         #return {"obs":(np.ravel(self.observation)).astype(np.float32),"action_mask":np.array(self.get_legal_actions(self.observation)).astype(np.int32)}
 
-    def setup():
+    def instance_loader(self):
+        
         pass

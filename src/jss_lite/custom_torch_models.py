@@ -35,12 +35,27 @@ class ActorCriticModel(TorchModelV2, nn.Module, ABC):
 
     def forward(self, input_dict, state, seq_lens):
         x = input_dict["obs"]
+        if len(x)!=1:
+            x=x[0]
+            #print(len(x))
+            #print(seq_lens)
+            #print(x)
+            batch_size = 1
+            height = 15
+            width = 7
+            in_channels = 1
+
+            # Use the reshape method to transform the array
+            x = x.reshape(in_channels,width,height)
+ 
         x = self.shared_layers(x)
         # actor outputs
         logits = self.actor_layers(x)
 
         # compute value
         self._value_out = self.critic_layers(x)
+
+
         return logits, None
 
     def value_function(self):
@@ -59,14 +74,12 @@ class ActorCriticModel(TorchModelV2, nn.Module, ABC):
 
             priors = priors.cpu().numpy()
             value = value.cpu().numpy()
-
             return priors, value
 
 
 class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
-
 
 class ConvNetModel(ActorCriticModel):
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
@@ -79,10 +92,10 @@ class ConvNetModel(ActorCriticModel):
 
         self.shared_layers = nn.Sequential(
             nn.Conv2d(in_channels, 32, kernel_size=4, stride=2),
-            nn.Conv2d(32, 64, kernel_size=2, stride=1),
-            nn.Conv2d(64, 64, kernel_size=2, stride=1),
+            nn.Conv2d(32, 64, kernel_size=1, stride=1),
+            nn.Conv2d(64, 1, kernel_size=1, stride=1),
             Flatten(),
-            nn.Linear(1024, feature_dim),
+            nn.Linear(12, feature_dim),
         )
 
         self.actor_layers = nn.Sequential(
@@ -94,6 +107,52 @@ class ConvNetModel(ActorCriticModel):
         )
 
         self._value_out = None
+
+class ConvNetModel_old(ActorCriticModel):
+    def __init__(self, obs_space, action_space, num_outputs, model_config, name):
+        ActorCriticModel.__init__(
+            self, obs_space, action_space, num_outputs, model_config, name
+        )
+        in_channels = model_config["custom_model_config"]["in_channels"]
+        feature_dim = model_config["custom_model_config"]["feature_dim"]
+
+        self.shared_layers = nn.Sequential(
+            nn.Conv2d(in_channels, 32, kernel_size=4, stride=2),
+            nn.Conv2d(32, 64, kernel_size=2, stride=1),
+            nn.Conv2d(64, 30, kernel_size=2, stride=1),
+            Flatten(),
+            nn.Linear(20, feature_dim),
+        )
+
+        self.actor_layers = nn.Sequential(
+            nn.Linear(in_features=feature_dim, out_features=action_space.n)
+        )
+
+        self.critic_layers = nn.Sequential(
+            nn.Linear(in_features=feature_dim, out_features=1)
+        )
+
+        self._value_out = None
+    def forward(self, input_dict, state, seq_lens):
+    
+        x = input_dict["obs"]
+
+        # Specify the values for batch_size, height, width, and in_channels
+        batch_size = 1
+        height = 15
+        width = 7
+        in_channels = 1
+
+        # Use the reshape method to transform the array
+        x = x.reshape(in_channels,width,height)
+        print(x)
+        x = self.shared_layers(x)
+        # actor outputs
+        logits = self.actor_layers(x)
+
+        # compute value
+        self._value_out = self.critic_layers(x)
+        return logits, None
 
 
 class DenseModel(ActorCriticModel):

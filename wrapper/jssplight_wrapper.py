@@ -6,6 +6,7 @@ from gym.spaces import Discrete, Dict, Box
 from src.jss_lite.jss_lite import jss_lite
 import time
 import pandas as pd
+import torch
 # configs:
 _max_jobs=15
 _max_machines=15
@@ -279,3 +280,48 @@ class Jssp_light_wrapper(gym.Env):
     def render(self,x_bar="Machine",y_bar="Job",start_count=0):
         self.env.render(x_bar=x_bar,y_bar=y_bar,start_count=0)
 
+class Tensor_Wrapper(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.observation_space = Dict(
+            {
+                "obs": gym.spaces.Box(low=0, high=1, shape=(15, 7), dtype=np.float64),
+                "action_mask": self.env.observation_space['action_mask'],
+            }
+        )
+    def reset(self):
+        # Reset the environment and receive the initial observation
+        observation = self.env.reset()
+
+        # Transform the observation from a numpy array to a tensor
+        #observation['obs'] = torch.from_numpy(observation['obs']).view(15, 7)
+        observation['obs'] = observation['obs'].reshape(15,7)
+
+        return observation
+
+    def step(self, action):
+        # Step the environment and receive the next observation
+
+        observation, reward, done, info = self.env.step(action)
+
+        # Transform the observation from a numpy array to a tensor
+        #observation['obs'] = torch.from_numpy(observation['obs']).view(15, 7)
+        return {'obs':observation['obs'].reshape(15,7),'action_mask':observation['action_mask']}, reward, done, info
+
+    def observation(self,obs):
+        r_obs=obs['obs'].reshape(15,7)
+        r_a_mask=obs['action_mask']
+        return(
+            {"obs":r_obs,"action_mask":r_a_mask,
+            }
+        )
+
+    def set_state(self,state):
+        dic = self.env.set_state(state)
+        r_obs=dic['obs'].reshape(15,7)
+        r_a_mask=dic['action_mask']
+        return(
+            {"obs":r_obs,"action_mask":r_a_mask,
+            }
+        )
+       
